@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User";
 
 export default class AuthService {
-  static isAuthenticated(
+  public isAuthenticated(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
@@ -12,7 +12,7 @@ export default class AuthService {
     const token = req.cookies.jwt;
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
     }
 
     try {

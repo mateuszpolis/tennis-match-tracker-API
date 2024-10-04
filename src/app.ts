@@ -4,7 +4,6 @@ import passport from "./config/passportConfig";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/database";
 import userRouter from "./routers/userRouter";
-
 const app: Application = express();
 
 app.use(express.json());
@@ -31,7 +30,7 @@ app.get("/", (req, res) => {
 
 (async () => {
   try {
-    await sequelize.sync();
+    await sequelize.sync({ force: true });
 
     app.listen(5010, () => {
       console.log("Server is running on port 5010");

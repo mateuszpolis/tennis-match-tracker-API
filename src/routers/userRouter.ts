@@ -11,9 +11,11 @@ import AuthService from "../services/authService";
 class UserRouter {
   public router = express.Router();
   private mailService;
+  private authService;
 
   constructor() {
     this.mailService = new MailService();
+    this.authService = new AuthService();
     this.initializeRoutes();
   }
 
@@ -26,12 +28,15 @@ class UserRouter {
     this.router.post("/reset-password", this.resetPassword);
     this.router.get(
       "/details",
-      AuthService.isAuthenticated,
+      this.authService.isAuthenticated,
       this.getUserDetails
     );
   }
 
-  private forgotPassword = async (req: Request, res: Response): Promise<any> => {
+  private forgotPassword = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
     const { email } = req.body;
 
     try {
@@ -183,7 +188,7 @@ class UserRouter {
     const token = req.cookies.jwt;
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
     }
 
     try {

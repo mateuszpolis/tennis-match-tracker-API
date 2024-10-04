@@ -12,7 +12,7 @@ interface TournamentEditionAttributes {
   currentNumberOfContestants: number;
 }
 
-interface TournamentEditionCreationAttributes
+export interface TournamentEditionCreationAttributes
   extends Optional<
     TournamentEditionAttributes,
     "editionName" | "currentNumberOfContestants"

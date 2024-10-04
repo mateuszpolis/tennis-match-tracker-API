@@ -1,9 +1,29 @@
 import TennisGround, {
   TennisGroundCreationAttributes,
 } from "../models/TennisGround";
-import { Transaction } from "sequelize";
+import { Op, Transaction } from "sequelize";
 
 export default class GroundService {
+  public getGroundById = async (id: number) => {
+    return await TennisGround.findByPk(id, {
+      include: ["tournaments"],
+    });
+  };
+
+  public getGroundsByName = async (name: string) => {
+    return await TennisGround.findAll({
+      where: {
+        name: {
+          [Op.iLike]: `%${name}%`,
+        },
+      },
+    });
+  };
+
+  public getAllGrounds = async () => {
+    return await TennisGround.findAll();
+  };
+
   public createGround = async (
     ground: TennisGroundCreationAttributes,
     t: Transaction

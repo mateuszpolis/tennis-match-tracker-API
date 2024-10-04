@@ -115,13 +115,13 @@ export default class MailService {
   }
 
   public sendPasswordChangedEmail = async (email: string) => {
-    await this.transporter.sendMail({
-      from: "Eltimex <noreply@eltimex.pl>",
-      to: email,
-      subject: "Twoje hasło zostało zmienione",
-      text: "Twoje hasło zostało zmienione",
-      html: this.getStyledHtml("<p>Twoje hasło zostało zmienione</p>"),
-    });
+    // await this.transporter.sendMail({
+    //   from: "Eltimex <noreply@eltimex.pl>",
+    //   to: email,
+    //   subject: "Twoje hasło zostało zmienione",
+    //   text: "Twoje hasło zostało zmienione",
+    //   html: this.getStyledHtml("<p>Twoje hasło zostało zmienione</p>"),
+    // });
   };
 
   public async sendResetPasswordEmail(email: string, token: string) {
@@ -131,13 +131,13 @@ export default class MailService {
       <a href="${resetPasswordLink}">Zresetuj hasło</a>
     `;
 
-    await this.transporter.sendMail({
-      from: "Eltimex <noreply@eltimex.pl>",
-      to: email,
-      subject: "Zresetuj swoje hasło",
-      text: "Kliknij w link, aby zresetować swoje hasło",
-      html: this.getStyledHtml(html),
-    });
+    // await this.transporter.sendMail({
+    //   from: "Eltimex <noreply@eltimex.pl>",
+    //   to: email,
+    //   subject: "Zresetuj swoje hasło",
+    //   text: "Kliknij w link, aby zresetować swoje hasło",
+    //   html: this.getStyledHtml(html),
+    // });
   }
 
   public async sendConfirmationEmail(email: string, token: string) {
@@ -147,12 +147,12 @@ export default class MailService {
       <a href="${confirmationLink}">Potwierdź email</a>
     `;
 
-    await this.transporter.sendMail({
-      from: "Eltimex <noreply@eltimex.pl>",
-      to: email,
-      subject: "Potwierdź swój email",
-      text: "Kliknij w link, aby potwierdzić swój email",
-      html: this.getStyledHtml(html),
-    });
+    // await this.transporter.sendMail({
+    //   from: "Eltimex <noreply@eltimex.pl>",
+    //   to: email,
+    //   subject: "Potwierdź swój email",
+    //   text: "Kliknij w link, aby potwierdzić swój email",
+    //   html: this.getStyledHtml(html),
+    // });
   }
 }

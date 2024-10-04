@@ -19,7 +19,10 @@ export interface TournamentEditionCreationAttributes
   > {}
 
 class TournamentEdition
-  extends Model<TournamentEditionAttributes, TournamentEditionCreationAttributes>
+  extends Model<
+    TournamentEditionAttributes,
+    TournamentEditionCreationAttributes
+  >
   implements TournamentEditionAttributes
 {
   declare year: number;
@@ -75,10 +78,5 @@ TournamentEdition.init(
     timestamps: false,
   }
 );
-
-// TournamentEdition.belongsTo(Tournament, {
-//   foreignKey: "tournamentId",
-//   as: "tournament",
-// });
 
 export default TournamentEdition;

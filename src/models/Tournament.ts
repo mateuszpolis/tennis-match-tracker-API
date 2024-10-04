@@ -54,16 +54,6 @@ Tournament.init(
   }
 );
 
-Tournament.belongsTo(TennisGround, {
-  foreignKey: "tennisGroundId",
-  as: "ground",
-});
-
-Tournament.hasMany(TournamentEdition, {
-  foreignKey: "tournamentId",
-  as: "editions",
-});
-
 export type TournamentFilterOptions = {
   name?: string;
   groundId?: number;

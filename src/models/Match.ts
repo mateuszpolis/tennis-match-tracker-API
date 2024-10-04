@@ -117,17 +117,4 @@ Match.init(
   }
 );
 
-Match.belongsTo(User, { as: "firstPlayer", foreignKey: "firstPlayerId" });
-Match.belongsTo(User, { as: "secondPlayer", foreignKey: "secondPlayerId" });
-Match.belongsTo(TennisGround, { as: "ground", foreignKey: "groundId" });
-Match.belongsTo(Tournament, { as: "tournament", foreignKey: "tournamentId" });
-Match.belongsTo(PlayerStats, {
-  as: "firstPlayerStats",
-  foreignKey: "firstPlayerStatsId",
-});
-Match.belongsTo(PlayerStats, {
-  as: "secondPlayerStats",
-  foreignKey: "secondPlayerStatsId",
-});
-
 export default Match;

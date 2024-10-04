@@ -1,3 +1,4 @@
+import TennisGround from "../models/TennisGround";
 import Tournament, {
   TournamentCreationAttributes,
   TournamentFilterOptions,
@@ -12,7 +13,18 @@ export default class TournamentService {
     tournament: TournamentCreationAttributes,
     t: Transaction
   ) => {
-    return await Tournament.create(tournament, { transaction: t });
+    const tennisGround = await TennisGround.findByPk(tournament.tennisGroundId);
+
+    if (!tennisGround) {
+      throw new Error("Tennis Ground not found");
+    }
+
+    const tournamentData = {
+      ...tournament,
+      surface: tennisGround.surface,
+    };
+
+    return await Tournament.create(tournamentData, { transaction: t });
   };
 
   public editTournament = async (
@@ -20,6 +32,18 @@ export default class TournamentService {
     updateData: Partial<TournamentCreationAttributes>,
     t: Transaction
   ) => {
+    if (updateData.tennisGroundId) {
+      const tennisGround = await TennisGround.findByPk(
+        updateData.tennisGroundId
+      );
+
+      if (!tennisGround) {
+        throw new Error("Tennis Ground not found");
+      }
+
+      updateData.surface = tennisGround.surface;
+    }
+
     const [updatedRows] = await Tournament.update(updateData, {
       where: { id },
       transaction: t,
@@ -35,7 +59,9 @@ export default class TournamentService {
   };
 
   public getTournamentById = async (id: number) => {
-    return await Tournament.findByPk(id);
+    return await Tournament.findByPk(id, {
+      include: ["editions", "ground"],
+    });
   };
 
   public getFilteredTournaments = async (
@@ -67,6 +93,7 @@ export default class TournamentService {
     return await Tournament.findAll({
       where: whereClause,
       order: orderClause,
+      include: ["ground"],
     });
   };
 

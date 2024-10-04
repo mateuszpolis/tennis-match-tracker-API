@@ -2,7 +2,9 @@ import express, { Request, Response } from "express";
 import AuthService from "../services/authService";
 import GroundService from "../services/groundService";
 import sequelize from "../config/database";
-import { TennisGroundCreationAttributes } from "../models/TennisGround";
+import TennisGround, {
+  TennisGroundCreationAttributes,
+} from "../models/TennisGround";
 
 class GroundRouter {
   public router = express.Router();
@@ -16,6 +18,9 @@ class GroundRouter {
   }
 
   private initializeRoutes() {
+    this.router.get("/", this.getTennisGrounds);
+    this.router.get("/:id", this.getTennisGround);
+    this.router.get("/name/:name", this.getGroundsByName);
     this.router.post(
       "/create",
       this.authService.isAuthenticated,
@@ -89,6 +94,58 @@ class GroundRouter {
         .json({ message: "Tennis ground deleted successfully" });
     } catch (e: any) {
       await t.rollback();
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private getTennisGrounds = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    try {
+      const grounds = await this.groundService.getAllGrounds();
+      return res.status(200).json(grounds);
+    } catch (e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private getTennisGround = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { id } = req.params;
+
+    try {
+      const ground = await this.groundService.getGroundById(Number(id));
+
+      if (!ground) {
+        return res.status(404).json({ message: "Tennis ground not found" });
+      }
+
+      return res.status(200).json(ground);
+    } catch (e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private getGroundsByName = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { name } = req.params;
+
+    try {
+      const grounds = await this.groundService.getGroundsByName(name);
+
+      return res.status(200).json(grounds);
+    } catch (e: any) {
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });

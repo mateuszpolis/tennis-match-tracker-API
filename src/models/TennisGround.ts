@@ -27,6 +27,8 @@ class TennisGround
   declare country: string;
   declare city: string;
   declare surface: Surface;
+
+  declare readonly tournaments: Tournament[];
 }
 
 TennisGround.init(
@@ -66,10 +68,5 @@ TennisGround.init(
     tableName: "tennis_grounds",
   }
 );
-
-// TennisGround.hasMany(Tournament, {
-//   foreignKey: "tennisGroundId",
-//   as: "tournaments",
-// });
 
 export default TennisGround;

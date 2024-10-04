@@ -3,6 +3,7 @@ import cors from "cors";
 import passport from "./config/passportConfig";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/database";
+import "./models/associations";
 import userRouter from "./routers/userRouter";
 import tournamentRouter from "./routers/tournamentRouter";
 import groundRouter from "./routers/groundRouter";
@@ -34,7 +35,7 @@ app.get("/", (req, res) => {
 
 (async () => {
   try {
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ force: false });
 
     app.listen(5010, () => {
       console.log("Server is running on port 5010");

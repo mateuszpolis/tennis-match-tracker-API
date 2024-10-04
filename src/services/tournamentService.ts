@@ -1,10 +1,10 @@
 import Tournament, {
   TournamentCreationAttributes,
   TournamentFilterOptions,
-} from "models/Tournament";
+} from "../models/Tournament";
 import TournamentEdition, {
   TournamentEditionCreationAttributes,
-} from "models/TournamentEdition";
+} from "../models/TournamentEdition";
 import { Op, Transaction } from "sequelize";
 
 export default class TournamentService {

@@ -1,12 +1,12 @@
-import AuthService from "services/authService";
+import AuthService from "../services/authService";
 import express, { Request, Response } from "express";
 import Tournament, {
   TournamentCreationAttributes,
   TournamentFilterOptions,
-} from "models/Tournament";
-import TournamentService from "services/tournamentService";
-import sequelize from "config/database";
-import { TournamentEditionCreationAttributes } from "models/TournamentEdition";
+} from "../models/Tournament";
+import TournamentService from "../services/tournamentService";
+import sequelize from "../config/database";
+import { TournamentEditionCreationAttributes } from "../models/TournamentEdition";
 
 class TournamentRouter {
   public router = express.Router();
@@ -248,4 +248,4 @@ class TournamentRouter {
   };
 }
 
-export default TournamentRouter;
+export default new TournamentRouter().router;

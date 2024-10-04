@@ -4,6 +4,8 @@ import passport from "./config/passportConfig";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/database";
 import userRouter from "./routers/userRouter";
+import tournamentRouter from "./routers/tournamentRouter";
+import groundRouter from "./routers/groundRouter";
 const app: Application = express();
 
 app.use(express.json());
@@ -23,6 +25,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use("/api/users", userRouter);
+app.use("/api/tournaments", tournamentRouter);
+app.use("/api/grounds", groundRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

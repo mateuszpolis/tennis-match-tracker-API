@@ -13,7 +13,7 @@ interface TennisGroundAttributes {
   surface: Surface;
 }
 
-interface TennisGroundCreationAttributes
+export interface TennisGroundCreationAttributes
   extends Optional<TennisGroundAttributes, "id"> {}
 
 class TennisGround
@@ -67,9 +67,9 @@ TennisGround.init(
   }
 );
 
-TennisGround.hasMany(Tournament, {
-  foreignKey: "tennisGroundId",
-  as: "tournaments",
-});
+// TennisGround.hasMany(Tournament, {
+//   foreignKey: "tennisGroundId",
+//   as: "tournaments",
+// });
 
 export default TennisGround;

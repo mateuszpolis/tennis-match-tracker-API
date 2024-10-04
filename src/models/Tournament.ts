@@ -8,8 +8,6 @@ interface TournamentAttributes {
   id: number;
   name: string;
   surface: Surface;
-  startDate: Date;
-  endDate: Date;
   tennisGroundId: number;
 }
 
@@ -23,8 +21,6 @@ class Tournament
   declare id: number;
   declare name: string;
   declare surface: Surface;
-  declare startDate: Date;
-  declare endDate: Date;
   declare tennisGroundId: number;
 }
 
@@ -41,14 +37,6 @@ Tournament.init(
     },
     surface: {
       type: DataTypes.ENUM(...Object.values(Surface)),
-      allowNull: false,
-    },
-    startDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    endDate: {
-      type: DataTypes.DATE,
       allowNull: false,
     },
     tennisGroundId: {
@@ -83,6 +71,5 @@ export type TournamentFilterOptions = {
   sortByStartDate?: "asc" | "desc";
   sortByEndDate?: "asc" | "desc";
 };
-
 
 export default Tournament;

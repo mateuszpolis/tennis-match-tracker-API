@@ -76,9 +76,9 @@ TournamentEdition.init(
   }
 );
 
-TournamentEdition.belongsTo(Tournament, {
-  foreignKey: "tournamentId",
-  as: "tournament",
-});
+// TournamentEdition.belongsTo(Tournament, {
+//   foreignKey: "tournamentId",
+//   as: "tournament",
+// });
 
 export default TournamentEdition;

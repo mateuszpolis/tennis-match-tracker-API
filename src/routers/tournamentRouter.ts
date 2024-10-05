@@ -7,6 +7,7 @@ import Tournament, {
 import TournamentService from "../services/tournamentService";
 import sequelize from "../config/database";
 import { TournamentEditionCreationAttributes } from "../models/TournamentEdition";
+import User from "../models/User";
 
 class TournamentRouter {
   public router = express.Router();
@@ -41,9 +42,14 @@ class TournamentRouter {
       this.editTournamentEdition
     );
     this.router.get("/filter", this.getTournaments);
-    this.router.get("/filter/edition", this.getTournamentEditions);
+    this.router.get("/edition/filter", this.getTournamentEditions);
     this.router.get("/one/:id", this.getTournament);
-    this.router.get("/one/edition/:id", this.getTournamentEdition);
+    this.router.get("/edition/one", this.getTournamentEdition);
+    this.router.post(
+      "/edition/signup",
+      this.authService.isAuthenticated,
+      this.signupForTournament
+    );
   }
 
   // Tournaments
@@ -155,6 +161,17 @@ class TournamentRouter {
   ): Promise<any> => {
     const input = req.body as TournamentEditionCreationAttributes;
 
+    const existingTournament = this.tournamentService.getTournamentEdition(
+      input.tournamentId,
+      new Date().getFullYear()
+    );
+
+    if (!existingTournament) {
+      return res
+        .status(400)
+        .json({ message: "Tournament edition already exists." });
+    }
+
     const t = await sequelize.transaction();
     try {
       await this.tournamentService.createTournamentEdition(input, t);
@@ -208,7 +225,7 @@ class TournamentRouter {
     req: Request,
     res: Response
   ): Promise<any> => {
-    const filterOptions = req.body as TournamentFilterOptions;
+    const filterOptions = req.query as unknown as TournamentFilterOptions;
 
     try {
       const tournamentEditions =
@@ -227,11 +244,14 @@ class TournamentRouter {
     req: Request,
     res: Response
   ): Promise<any> => {
-    const { id } = req.params;
+    const { id, year } = req.query;
 
     try {
       const tournamentEdition =
-        await this.tournamentService.getTournamentEditionById(Number(id));
+        await this.tournamentService.getTournamentEdition(
+          Number(id),
+          Number(year)
+        );
 
       if (!tournamentEdition) {
         return res
@@ -240,6 +260,51 @@ class TournamentRouter {
       }
 
       return res.status(200).json(tournamentEdition);
+    } catch (e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private signupForTournament = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { tournamentId, year } = req.body as {
+      tournamentId: number;
+      year: number;
+    };
+    const userId = (req.user as User).id;
+
+    const tournamentEdition = await this.tournamentService.getTournamentEdition(
+      tournamentId,
+      year
+    );
+    if (!tournamentEdition) {
+      return res
+        .status(404)
+        .json({ message: "Tournament edition does not exist" });
+    }
+
+    const existingRecord =
+      await this.tournamentService.getUserTournamentEditionRecord(
+        userId,
+        tournamentEdition.id
+      );
+
+    if (existingRecord) {
+      return res.status(400).json({ message: "User already signed-up" });
+    }
+
+    try {
+      await this.tournamentService.createUserTournamentEdition(
+        userId,
+        tournamentEdition.id,
+      );
+      return res
+        .status(200)
+        .json({ message: "User signed-up for the tournament" });
     } catch (e: any) {
       return res
         .status(500)

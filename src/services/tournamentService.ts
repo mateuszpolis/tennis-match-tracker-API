@@ -1,3 +1,4 @@
+import UserTournamentEdition from "../models/UserTournamentEdition";
 import TennisGround from "../models/TennisGround";
 import Tournament, {
   TournamentCreationAttributes,
@@ -6,7 +7,7 @@ import Tournament, {
 import TournamentEdition, {
   TournamentEditionCreationAttributes,
 } from "../models/TournamentEdition";
-import { Op, Transaction } from "sequelize";
+import { Op, Transaction, where } from "sequelize";
 
 export default class TournamentService {
   public createTournament = async (
@@ -60,7 +61,22 @@ export default class TournamentService {
 
   public getTournamentById = async (id: number) => {
     return await Tournament.findByPk(id, {
-      include: ["editions", "ground"],
+      include: [
+        {
+          model: TournamentEdition,
+          as: "editions",
+          include: [
+            {
+              model: Tournament,
+              as: "tournament",
+            },
+          ],
+        },
+        {
+          model: TennisGround,
+          as: "ground",
+        },
+      ],
     });
   };
 
@@ -101,7 +117,12 @@ export default class TournamentService {
     tournamentEdition: TournamentEditionCreationAttributes,
     t: Transaction
   ) => {
-    return await TournamentEdition.create(tournamentEdition, {
+    const editionWithYear = {
+      ...tournamentEdition,
+      year: new Date().getFullYear(),
+    };
+
+    return await TournamentEdition.create(editionWithYear, {
       transaction: t,
     });
   };
@@ -123,18 +144,28 @@ export default class TournamentService {
   public getFilteredTournamentEditions = async (
     filterOptions: TournamentFilterOptions
   ) => {
-    const { name, groundId, surface, sortByStartDate, sortByEndDate } =
-      filterOptions;
+    const {
+      name,
+      groundId,
+      surface,
+      sortByStartDate,
+      sortByEndDate,
+      startDateAfter,
+    } = filterOptions;
 
     const whereClause: any = {};
+
     if (name) {
-      whereClause.name = { [Op.like]: `%${name}%` };
+      whereClause["$Tournament.name$"] = { [Op.like]: `%${name}%` };
     }
     if (groundId) {
-      whereClause.groundId = groundId;
+      whereClause["$Tournament.groundId$"] = groundId;
     }
     if (surface) {
-      whereClause.surface = surface;
+      whereClause["$Tournament.surface$"] = surface;
+    }
+    if (startDateAfter) {
+      whereClause.startDate = { [Op.gt]: startDateAfter };
     }
 
     const orderClause: any[] = [];
@@ -148,10 +179,38 @@ export default class TournamentService {
     return await TournamentEdition.findAll({
       where: whereClause,
       order: orderClause,
+      include: ["tournament"],
     });
   };
 
-  public getTournamentEditionById = async (id: number) => {
-    return await TournamentEdition.findByPk(id);
+  public getTournamentEdition = async (id: number, year: number) => {
+    return await TournamentEdition.findOne({
+      where: {
+        year,
+        tournamentId: id,
+      },
+    });
+  };
+
+  public getUserTournamentEditionRecord = async (
+    userId: number,
+    tournamentEditionId: number,
+  ) => {
+    return await UserTournamentEdition.findOne({
+      where: {
+        userId,
+        tournamentEditionId,
+      },
+    });
+  };
+
+  public createUserTournamentEdition = async (
+    userId: number,
+    tournamentEditionId: number,
+  ) => {
+    await UserTournamentEdition.create({
+      userId,
+      tournamentEditionId,
+    });
   };
 }

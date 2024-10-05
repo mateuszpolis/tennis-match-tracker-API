@@ -4,6 +4,7 @@ import TennisGround from "./TennisGround";
 import Tournament from "./Tournament";
 import TournamentEdition from "./TournamentEdition";
 import User from "./User";
+import UserTournamentEdition from "./UserTournamentEdition";
 
 Tournament.belongsTo(TennisGround, {
   foreignKey: "tennisGroundId",
@@ -23,6 +24,18 @@ TennisGround.hasMany(Tournament, {
 TournamentEdition.belongsTo(Tournament, {
   foreignKey: "tournamentId",
   as: "tournament",
+});
+
+User.belongsToMany(TournamentEdition, {
+  through: UserTournamentEdition,
+  foreignKey: "userId",
+  as: "tournamentEditions",
+});
+
+TournamentEdition.belongsToMany(User, {
+  through: UserTournamentEdition,
+  foreignKey: "tournamentEditionId",
+  as: "users",
 });
 
 Match.belongsTo(User, { as: "firstPlayer", foreignKey: "firstPlayerId" });

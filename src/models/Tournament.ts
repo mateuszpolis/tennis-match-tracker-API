@@ -60,6 +60,7 @@ export type TournamentFilterOptions = {
   surface?: Surface;
   sortByStartDate?: "asc" | "desc";
   sortByEndDate?: "asc" | "desc";
+  startDateAfter?: Date;
 };
 
 export default Tournament;

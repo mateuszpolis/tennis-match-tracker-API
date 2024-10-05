@@ -3,6 +3,7 @@ import sequelize from "../config/database";
 import Tournament from "./Tournament";
 
 interface TournamentEditionAttributes {
+  id: number;
   year: number;
   tournamentId: number;
   editionName?: string;
@@ -15,7 +16,7 @@ interface TournamentEditionAttributes {
 export interface TournamentEditionCreationAttributes
   extends Optional<
     TournamentEditionAttributes,
-    "editionName" | "currentNumberOfContestants"
+    "editionName" | "currentNumberOfContestants" | "year"
   > {}
 
 class TournamentEdition
@@ -25,6 +26,7 @@ class TournamentEdition
   >
   implements TournamentEditionAttributes
 {
+  declare id: number;
   declare year: number;
   declare tournamentId: number;
   declare editionName?: string;
@@ -36,15 +38,18 @@ class TournamentEdition
 
 TournamentEdition.init(
   {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     year: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      primaryKey: true,
     },
     tournamentId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      primaryKey: true,
       references: {
         model: Tournament,
         key: "id",

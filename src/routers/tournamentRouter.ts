@@ -50,6 +50,11 @@ class TournamentRouter {
       this.authService.isAuthenticated,
       this.signupForTournament
     );
+    this.router.post(
+      "/edition/start",
+      this.authService.isAuthenticated,
+      this.startTournament
+    );
   }
 
   // Tournaments
@@ -58,6 +63,8 @@ class TournamentRouter {
     res: Response
   ): Promise<any> => {
     const input = req.body as TournamentCreationAttributes;
+    console.log(req.body);
+    console.log(input);
 
     const existingTournament = await Tournament.findOne({
       where: {
@@ -79,6 +86,7 @@ class TournamentRouter {
         .status(201)
         .json({ message: "Tournament created successfully" });
     } catch (e: any) {
+      console.log(e);
       await t.rollback();
       return res
         .status(500)
@@ -161,15 +169,16 @@ class TournamentRouter {
   ): Promise<any> => {
     const input = req.body as TournamentEditionCreationAttributes;
 
-    const existingTournament = this.tournamentService.getTournamentEdition(
-      input.tournamentId,
-      new Date().getFullYear()
-    );
+    const existingTournament =
+      await this.tournamentService.getTournamentEditionForTournamentByYear(
+        input.tournamentId,
+        new Date().getFullYear()
+      );
 
-    if (!existingTournament) {
+    if (existingTournament) {
       return res
         .status(400)
-        .json({ message: "Tournament edition already exists." });
+        .json({ message: "Tournament edition for this year already exists." });
     }
 
     const t = await sequelize.transaction();
@@ -244,12 +253,12 @@ class TournamentRouter {
     req: Request,
     res: Response
   ): Promise<any> => {
-    const { id, year } = req.query;
+    const { tournamentId, year } = req.query;
 
     try {
       const tournamentEdition =
-        await this.tournamentService.getTournamentEdition(
-          Number(id),
+        await this.tournamentService.getTournamentEditionForTournamentByYear(
+          Number(tournamentId),
           Number(year)
         );
 
@@ -271,20 +280,34 @@ class TournamentRouter {
     req: Request,
     res: Response
   ): Promise<any> => {
-    const { tournamentId, year } = req.body as {
-      tournamentId: number;
-      year: number;
+    const { tournamentEditionId } = req.body as {
+      tournamentEditionId: number;
     };
     const userId = (req.user as User).id;
 
-    const tournamentEdition = await this.tournamentService.getTournamentEdition(
-      tournamentId,
-      year
-    );
+    const tournamentEdition =
+      await this.tournamentService.getTournamentEditionById(
+        tournamentEditionId
+      );
     if (!tournamentEdition) {
       return res
         .status(404)
         .json({ message: "Tournament edition does not exist" });
+    }
+
+    if (
+      tournamentEdition.currentNumberOfContestants ===
+      tournamentEdition.maximumNumberOfContestants
+    ) {
+      return res
+        .status(402)
+        .json({ message: "The tournament has no free spots" });
+    }
+
+    if (!tournamentEdition.registrationOpen) {
+      return res
+        .status(404)
+        .json({ message: "The registration for the tournament is closed" });
     }
 
     const existingRecord =
@@ -297,15 +320,81 @@ class TournamentRouter {
       return res.status(400).json({ message: "User already signed-up" });
     }
 
+    const t = await sequelize.transaction();
     try {
       await this.tournamentService.createUserTournamentEdition(
         userId,
         tournamentEdition.id,
+        t
       );
+
+      await this.tournamentService.increasePlayerNumber(tournamentEdition, t);
+
+      await t.commit();
+
       return res
         .status(200)
         .json({ message: "User signed-up for the tournament" });
     } catch (e: any) {
+      await t.rollback();
+
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private startTournament = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { tournamentEditionId } = req.body as {
+      tournamentEditionId: number;
+    };
+
+    const tournamentEdition =
+      await this.tournamentService.getTournamentEditionById(
+        tournamentEditionId
+      );
+
+    if (!tournamentEdition) {
+      return res
+        .status(404)
+        .json({ message: "Tournament edition does not exist" });
+    }
+
+    if (tournamentEdition.currentNumberOfContestants < 2) {
+      return res.status(400).json({ message: "Not enough contestants" });
+    }
+
+    const t = await sequelize.transaction();
+    try {
+      await this.tournamentService.closeTournamentRegistration(
+        tournamentEdition,
+        t
+      );
+
+      let numberOfMatches = 0;
+
+      let round = tournamentEdition.round;
+      let maxRounds = Math.log2(tournamentEdition.maximumNumberOfContestants);
+      do {
+        numberOfMatches = await this.tournamentService.drawRound(
+          tournamentEdition,
+          t
+        );
+
+        round++;
+      } while (numberOfMatches === 0 && round <= maxRounds);
+
+      await t.commit();
+
+      return res
+        .status(200)
+        .json({ message: "Tournament started successfully" });
+    } catch (e: any) {
+      await t.rollback();
+
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });

@@ -7,14 +7,28 @@ import Tournament, {
 import TournamentEdition, {
   TournamentEditionCreationAttributes,
 } from "../models/TournamentEdition";
-import { Op, Transaction, where } from "sequelize";
+import { Op, Transaction } from "sequelize";
+import User from "../models/User";
+import MatchService from "./matchService";
+import Match from "../models/Match";
 
 export default class TournamentService {
+  private matchService;
+
+  constructor() {
+    this.matchService = new MatchService();
+  }
+
   public createTournament = async (
     tournament: TournamentCreationAttributes,
     t: Transaction
   ) => {
-    const tennisGround = await TennisGround.findByPk(tournament.tennisGroundId);
+    const tennisGround = await TennisGround.findByPk(
+      tournament.tennisGroundId,
+      {
+        transaction: t,
+      }
+    );
 
     if (!tennisGround) {
       throw new Error("Tennis Ground not found");
@@ -25,6 +39,7 @@ export default class TournamentService {
       surface: tennisGround.surface,
     };
 
+    console.log(tournamentData);
     return await Tournament.create(tournamentData, { transaction: t });
   };
 
@@ -183,18 +198,72 @@ export default class TournamentService {
     });
   };
 
-  public getTournamentEdition = async (id: number, year: number) => {
+  public getTournamentEditionById = async (tournamentEditionId: number) => {
+    return await TournamentEdition.findByPk(tournamentEditionId, {
+      include: [
+        {
+          model: UserTournamentEdition,
+          as: "players",
+          include: [
+            {
+              model: User,
+              as: "user",
+            },
+          ],
+        },
+        {
+          model: Tournament,
+          as: "tournament",
+        },
+      ],
+    });
+  };
+
+  public getTournamentEditionForTournamentByYear = async (
+    tournamentId: number,
+    year: number
+  ) => {
     return await TournamentEdition.findOne({
       where: {
+        tournamentId,
         year,
-        tournamentId: id,
       },
+      include: [
+        {
+          model: UserTournamentEdition,
+          as: "players",
+          include: [
+            {
+              model: User,
+              as: "user",
+            },
+          ],
+        },
+        {
+          model: Match,
+          as: "matches",
+          include: [
+            {
+              model: User,
+              as: "firstPlayer",
+            },
+            {
+              model: User,
+              as: "secondPlayer",
+            },
+            {
+              model: TennisGround,
+              as: "ground",
+            },
+          ],
+        },
+      ],
     });
   };
 
   public getUserTournamentEditionRecord = async (
     userId: number,
-    tournamentEditionId: number,
+    tournamentEditionId: number
   ) => {
     return await UserTournamentEdition.findOne({
       where: {
@@ -207,10 +276,165 @@ export default class TournamentService {
   public createUserTournamentEdition = async (
     userId: number,
     tournamentEditionId: number,
+    t: Transaction
   ) => {
-    await UserTournamentEdition.create({
-      userId,
-      tournamentEditionId,
+    await UserTournamentEdition.create(
+      {
+        userId,
+        tournamentEditionId,
+      },
+      { transaction: t }
+    );
+  };
+
+  public increasePlayerNumber = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    await tournamentEdition.update(
+      {
+        currentNumberOfContestants:
+          tournamentEdition.currentNumberOfContestants + 1,
+      },
+      {
+        transaction: t,
+      }
+    );
+
+    await tournamentEdition.save({
+      transaction: t,
     });
+  };
+
+  public closeTournamentRegistration = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    await tournamentEdition.update(
+      {
+        registrationOpen: false,
+      },
+      { transaction: t }
+    );
+  };
+
+  public findPlayersForTournamentRound = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    const players = await UserTournamentEdition.findAll({
+      where: {
+        tournamentEditionId: tournamentEdition.id,
+      },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["rankingPoints"],
+        },
+      ],
+      order: [["user", "rankingPoints", "DESC"]],
+      transaction: t,
+    });
+
+    return players;
+  };
+
+  public drawRound = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ): Promise<number> => {
+    const numberOfMatches =
+      tournamentEdition.maximumNumberOfContestants /
+      Math.pow(2, tournamentEdition.round);
+
+    const players = await this.findPlayersForTournamentRound(
+      tournamentEdition,
+      t
+    );
+
+    const pointsForRound = this.getPointsForRound(
+      tournamentEdition.round,
+      tournamentEdition
+    );
+
+    for (const player of players) {
+      player.pointsReceived += pointsForRound;
+      await player.save({ transaction: t });
+    }
+
+    if (numberOfMatches >= players.length) {
+      players.forEach((player) => {
+        player.round += 1;
+        player.save({
+          transaction: t,
+        });
+      });
+      tournamentEdition.round += 1;
+      tournamentEdition.save({
+        transaction: t,
+      });
+
+      return 0;
+    }
+
+    const halfIndex = Math.ceil(players.length / 2);
+    const group1 = players.slice(0, halfIndex);
+    const group2 = players.slice(halfIndex);
+
+    const matches = [];
+
+    for (let i = 0; i < group1.length; i++) {
+      const player1 = group1[i];
+
+      if (i < group2.length) {
+        const player2 = group2[group2.length - 1 - i];
+
+        const match = {
+          player1Id: player1.userId,
+          player2Id: player2.userId,
+          round: tournamentEdition.round,
+        };
+
+        matches.push(match);
+      } else {
+        player1.round += 1;
+        await player1.save({ transaction: t });
+      }
+    }
+
+    await this.matchService.createMatchesForTournament(
+      tournamentEdition,
+      matches,
+      t
+    );
+
+    tournamentEdition.round += 1;
+    await tournamentEdition.save({ transaction: t });
+
+    return matches.length;
+  };
+
+  private getPointsForRound = (
+    round: number,
+    tournamentEdition: TournamentEdition
+  ): number => {
+    const totalPoints = tournamentEdition.tournament.points;
+    const totalPlayers = tournamentEdition.maximumNumberOfContestants;
+
+    const totalRounds = Math.ceil(Math.log2(totalPlayers));
+
+    if (round === totalRounds) {
+      return totalPoints;
+    }
+
+    if (round === totalRounds - 1) {
+      return totalPoints * 0.4;
+    }
+
+    const decayFactor = 0.4;
+    const roundFactor = Math.pow(decayFactor, totalRounds - round);
+
+    return Math.floor(totalPoints * roundFactor);
   };
 }

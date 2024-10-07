@@ -5,6 +5,7 @@ import User from "./User";
 import { Surface } from "./enums/Surface";
 import TennisGround from "./TennisGround";
 import PlayerStats from "./PlayerStats";
+import TournamentEdition from "./TournamentEdition";
 
 interface MatchAttributes {
   id: number;
@@ -15,12 +16,15 @@ interface MatchAttributes {
   secondPlayerScore: number;
   groundId: number;
   surface: Surface;
+  finished: boolean;
+  round?: number;
   firstPlayerStatsId?: number;
   secondPlayerStatsId?: number;
-  tournamentId?: number;
+  tournamentEditionId?: number;
 }
 
-interface MatchCreationAttributes extends Optional<MatchAttributes, "id"> {}
+export interface MatchCreationAttributes
+  extends Optional<MatchAttributes, "id"> {}
 
 class Match
   extends Model<MatchAttributes, MatchCreationAttributes>
@@ -34,9 +38,11 @@ class Match
   declare secondPlayerScore: number;
   declare groundId: number;
   declare surface: Surface;
+  declare finished: boolean;
+  declare round?: number;
   declare firstPlayerStatsId?: number;
   declare secondPlayerStatsId?: number;
-  declare tournamentId?: number;
+  declare tournamentEditionId?: number;
 }
 
 Match.init(
@@ -102,13 +108,22 @@ Match.init(
       },
       allowNull: true,
     },
-    tournamentId: {
+    tournamentEditionId: {
       type: DataTypes.INTEGER,
       references: {
-        model: Tournament,
+        model: TournamentEdition,
         key: "id",
       },
       allowNull: true,
+    },
+    round: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    finished: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

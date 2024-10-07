@@ -9,6 +9,7 @@ interface UserAttributes {
   password: string;
   role: UserRole;
   status: UserStatus;
+  rankingPoints: number;
   confirmationToken: string | null;
   resetPasswordToken: string | null;
   resetPasswordExpires: Date | null;
@@ -17,7 +18,8 @@ interface UserAttributes {
 export interface UserPublic
   extends Omit<UserAttributes, "password" | "confirmationToken"> {}
 
-interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
+interface UserCreationAttributes
+  extends Optional<UserAttributes, "id" | "rankingPoints"> {}
 
 export enum UserRole {
   Admin = "Admin",
@@ -41,6 +43,7 @@ class User
   declare password: string;
   declare role: UserRole;
   declare status: UserStatus;
+  declare rankingPoints: number;
   declare confirmationToken: string | null;
   declare resetPasswordToken: string | null;
   declare resetPasswordExpires: Date | null;
@@ -77,6 +80,11 @@ User.init(
     status: {
       type: DataTypes.ENUM("Active", "Inactive"),
       allowNull: false,
+    },
+    rankingPoints: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     confirmationToken: {
       type: DataTypes.STRING,

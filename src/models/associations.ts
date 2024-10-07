@@ -17,7 +17,7 @@ Tournament.hasMany(TournamentEdition, {
 });
 
 TennisGround.hasMany(Tournament, {
-  foreignKey: "id",
+  foreignKey: "tennisGroundId",
   as: "tournaments",
 });
 
@@ -26,26 +26,39 @@ TournamentEdition.belongsTo(Tournament, {
   as: "tournament",
 });
 
-User.belongsToMany(TournamentEdition, {
-  through: UserTournamentEdition,
+TournamentEdition.hasMany(UserTournamentEdition, {
+  foreignKey: "tournamentEditionId",
+  as: "players",
+});
+
+UserTournamentEdition.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+User.hasMany(UserTournamentEdition, {
   foreignKey: "userId",
   as: "tournamentEditions",
 });
 
-TournamentEdition.belongsToMany(User, {
-  through: UserTournamentEdition,
+TournamentEdition.hasMany(Match, {
   foreignKey: "tournamentEditionId",
-  as: "users",
+  as: "matches",
 });
 
 Match.belongsTo(User, { as: "firstPlayer", foreignKey: "firstPlayerId" });
+
 Match.belongsTo(User, { as: "secondPlayer", foreignKey: "secondPlayerId" });
+
 Match.belongsTo(TennisGround, { as: "ground", foreignKey: "groundId" });
+
 Match.belongsTo(Tournament, { as: "tournament", foreignKey: "tournamentId" });
+
 Match.belongsTo(PlayerStats, {
   as: "firstPlayerStats",
   foreignKey: "firstPlayerStatsId",
 });
+
 Match.belongsTo(PlayerStats, {
   as: "secondPlayerStats",
   foreignKey: "secondPlayerStatsId",

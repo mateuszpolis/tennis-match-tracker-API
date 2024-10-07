@@ -1,6 +1,9 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 import Tournament from "./Tournament";
+import UserTournamentEdition from "./UserTournamentEdition";
+import User from "./User";
+import Match from "./Match";
 
 interface TournamentEditionAttributes {
   id: number;
@@ -11,12 +14,14 @@ interface TournamentEditionAttributes {
   endDate: Date;
   maximumNumberOfContestants: number;
   currentNumberOfContestants: number;
+  registrationOpen: boolean;
+  round: number;
 }
 
 export interface TournamentEditionCreationAttributes
   extends Optional<
     TournamentEditionAttributes,
-    "editionName" | "currentNumberOfContestants" | "year"
+    "editionName" | "currentNumberOfContestants" | "year" | "round"
   > {}
 
 class TournamentEdition
@@ -34,6 +39,12 @@ class TournamentEdition
   declare endDate: Date;
   declare maximumNumberOfContestants: number;
   declare currentNumberOfContestants: number;
+  declare registrationOpen: boolean;
+  declare round: number;
+
+  declare readonly players: UserTournamentEdition;
+  declare readonly tournament: Tournament;
+  declare readonly matches: Match;
 }
 
 TournamentEdition.init(
@@ -75,6 +86,16 @@ TournamentEdition.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 0,
+    },
+    registrationOpen: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    round: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
     },
   },
   {

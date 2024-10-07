@@ -9,6 +9,7 @@ interface TournamentAttributes {
   name: string;
   surface: Surface;
   tennisGroundId: number;
+  points: number;
 }
 
 export interface TournamentCreationAttributes
@@ -22,6 +23,7 @@ class Tournament
   declare name: string;
   declare surface: Surface;
   declare tennisGroundId: number;
+  declare points: number;
 }
 
 Tournament.init(
@@ -45,6 +47,10 @@ Tournament.init(
         model: TennisGround,
         key: "id",
       },
+      allowNull: false,
+    },
+    points: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
   },

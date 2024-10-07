@@ -37,6 +37,8 @@ class UserTournamentEdition
   declare numberOfLosses: number;
   declare round: number;
   declare pointsReceived: number;
+
+  declare readonly user: User;
 }
 
 UserTournamentEdition.init(

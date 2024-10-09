@@ -1,7 +1,7 @@
-import TournamentEdition from "models/TournamentEdition";
+import TournamentEdition from "../models/TournamentEdition";
 import Match, { MatchCreationAttributes } from "../models/Match";
 import { Transaction } from "sequelize";
-import { finished } from "stream";
+import TournamentService from "./tournamentService";
 
 export default class MatchService {
   public createMatchesForTournament = async (
@@ -28,4 +28,45 @@ export default class MatchService {
 
     return await Match.bulkCreate(matchData, { transaction: t });
   };
+
+  public getMatchById = async (id: number) => {
+    return await Match.findByPk(id, {
+      include: [
+        "firstPlayer",
+        "secondPlayer",
+        "ground",
+        "firstPlayerStats",
+        {
+          model: TournamentEdition,
+          as: "tournamentEdition",
+          include: ["tournament"],
+        },
+      ],
+    });
+  };
+
+  public createMatch = async (
+    match: MatchCreationAttributes,
+    t: Transaction
+  ) => {
+    return await Match.create(match, { transaction: t });
+  };
+
+  public updateMatch = async (
+    id: number,
+    match: MatchCreationAttributes,
+    t: Transaction
+  ) => {
+    return await Match.update(match, {
+      where: { id },
+      transaction: t,
+    });
+  };
+
+  public setFinishedStatus = async (id: number, t: Transaction) => {
+    return await Match.update(
+      { finished: true },
+      { where: { id }, transaction: t }
+    );
+  };  
 }

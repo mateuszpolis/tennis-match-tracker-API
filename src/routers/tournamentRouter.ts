@@ -63,9 +63,7 @@ class TournamentRouter {
     res: Response
   ): Promise<any> => {
     const input = req.body as TournamentCreationAttributes;
-    console.log(req.body);
-    console.log(input);
-
+    
     const existingTournament = await Tournament.findOne({
       where: {
         name: input.name,
@@ -86,7 +84,6 @@ class TournamentRouter {
         .status(201)
         .json({ message: "Tournament created successfully" });
     } catch (e: any) {
-      console.log(e);
       await t.rollback();
       return res
         .status(500)

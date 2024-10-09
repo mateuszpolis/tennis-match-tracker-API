@@ -16,6 +16,7 @@ interface TournamentEditionAttributes {
   currentNumberOfContestants: number;
   registrationOpen: boolean;
   round: number;
+  winnerId?: number;
 }
 
 export interface TournamentEditionCreationAttributes
@@ -41,10 +42,12 @@ class TournamentEdition
   declare currentNumberOfContestants: number;
   declare registrationOpen: boolean;
   declare round: number;
+  declare winnerId?: number;
 
   declare readonly players: UserTournamentEdition;
   declare readonly tournament: Tournament;
   declare readonly matches: Match;
+  declare readonly winner: User;
 }
 
 TournamentEdition.init(
@@ -96,6 +99,14 @@ TournamentEdition.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
+    },
+    winnerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: User,
+        key: "id",
+      },
     },
   },
   {

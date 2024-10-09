@@ -52,7 +52,10 @@ Match.belongsTo(User, { as: "secondPlayer", foreignKey: "secondPlayerId" });
 
 Match.belongsTo(TennisGround, { as: "ground", foreignKey: "groundId" });
 
-Match.belongsTo(Tournament, { as: "tournament", foreignKey: "tournamentId" });
+Match.belongsTo(TournamentEdition, {
+  as: "tournamentEdition",
+  foreignKey: "tournamentEditionId",
+});
 
 Match.belongsTo(PlayerStats, {
   as: "firstPlayerStats",
@@ -63,3 +66,5 @@ Match.belongsTo(PlayerStats, {
   as: "secondPlayerStats",
   foreignKey: "secondPlayerStatsId",
 });
+
+TournamentEdition.belongsTo(User, { as: "winner", foreignKey: "winnerId" });

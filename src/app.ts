@@ -4,9 +4,11 @@ import passport from "./config/passportConfig";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/database";
 import "./models/associations";
-import userRouter from "./routers/userRouter";
 import tournamentRouter from "./routers/tournamentRouter";
 import groundRouter from "./routers/groundRouter";
+import matchRouter from "./routers/matchRouter";
+import authRouter from "./routers/authRouter";
+import userRouter from "./routers/userRouter";
 const app: Application = express();
 
 app.use(express.json());
@@ -25,9 +27,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/tournaments", tournamentRouter);
 app.use("/api/grounds", groundRouter);
+app.use("/api/matches", matchRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

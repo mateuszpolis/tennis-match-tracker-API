@@ -39,7 +39,6 @@ export default class TournamentService {
       surface: tennisGround.surface,
     };
 
-    console.log(tournamentData);
     return await Tournament.create(tournamentData, { transaction: t });
   };
 
@@ -436,5 +435,124 @@ export default class TournamentService {
     const roundFactor = Math.pow(decayFactor, totalRounds - round);
 
     return Math.floor(totalPoints * roundFactor);
+  };
+
+  public advancePlayerToNextRound = async (
+    tournamentEdition: TournamentEdition,
+    userId: number,
+    t: Transaction
+  ) => {
+    const player = await UserTournamentEdition.findOne({
+      where: {
+        userId,
+        tournamentEditionId: tournamentEdition.id,
+      },
+      transaction: t,
+    });
+
+    if (!player) {
+      throw new Error("Player not found");
+    }
+
+    player.round += 1;
+    player.pointsReceived += this.getPointsForRound(
+      player.round,
+      tournamentEdition
+    );
+    await player.save({ transaction: t });
+  };
+
+  public setTournamentWinner = async (
+    tournamentEdition: TournamentEdition,
+    userId: number,
+    t: Transaction
+  ) => {
+    await tournamentEdition.update(
+      {
+        winnerId: userId,
+      },
+      { transaction: t }
+    );
+  };
+
+  public assignPointsToPlayers = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    const players = await UserTournamentEdition.findAll({
+      where: {
+        tournamentEditionId: tournamentEdition.id,
+      },
+      include: [
+        {
+          model: User,
+          as: "user",
+        },
+      ],
+      transaction: t,
+    });
+
+    for (const player of players) {
+      player.user.rankingPoints += player.pointsReceived;
+      await player.user.save({ transaction: t });
+    }
+  };
+
+  public grantFullPointsToWinner = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    const winner = await UserTournamentEdition.findOne({
+      where: {
+        userId: tournamentEdition.winnerId,
+        tournamentEditionId: tournamentEdition.id,
+      },
+      transaction: t,
+    });
+
+    if (!winner) {
+      throw new Error("Winner not found");
+    }
+
+    winner.pointsReceived = tournamentEdition.tournament.points;
+    await winner.save({ transaction: t });
+  };
+
+  public closeTournamentEdition = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    await tournamentEdition.update(
+      {
+        registrationOpen: false,
+      },
+      { transaction: t }
+    );
+  };
+
+  public tournamentMatchResult = async (match: Match, t: Transaction) => {
+    const tournamentEdition = await TournamentEdition.findByPk(
+      match.tournamentEditionId
+    );
+
+    if (!tournamentEdition) {
+      throw new Error("Tournament edition not found");
+    }
+
+    const winnerId =
+      match.firstPlayerScore > match.secondPlayerScore
+        ? match.firstPlayerId
+        : match.secondPlayerId;
+
+    if (
+      match.round === Math.log2(tournamentEdition.maximumNumberOfContestants)
+    ) {
+      await this.setTournamentWinner(tournamentEdition, winnerId, t);
+      await this.grantFullPointsToWinner(tournamentEdition, t);
+      await this.assignPointsToPlayers(tournamentEdition, t);
+      await this.closeTournamentEdition(tournamentEdition, t);
+    } else {
+      await this.advancePlayerToNextRound(tournamentEdition, winnerId, t);
+    }
   };
 }

@@ -532,7 +532,10 @@ export default class TournamentService {
 
   public tournamentMatchResult = async (match: Match, t: Transaction) => {
     const tournamentEdition = await TournamentEdition.findByPk(
-      match.tournamentEditionId
+      match.tournamentEditionId,
+      {
+        include: ["tournament"],
+      }
     );
 
     if (!tournamentEdition) {
@@ -544,15 +547,34 @@ export default class TournamentService {
         ? match.firstPlayerId
         : match.secondPlayerId;
 
-    if (
-      match.round === Math.log2(tournamentEdition.maximumNumberOfContestants)
-    ) {
-      await this.setTournamentWinner(tournamentEdition, winnerId, t);
-      await this.grantFullPointsToWinner(tournamentEdition, t);
-      await this.assignPointsToPlayers(tournamentEdition, t);
-      await this.closeTournamentEdition(tournamentEdition, t);
-    } else {
-      await this.advancePlayerToNextRound(tournamentEdition, winnerId, t);
+    await this.advancePlayerToNextRound(tournamentEdition, winnerId, t);
+
+    if (await this.checkIfRoundIsFinished(tournamentEdition, t)) {
+      const matchesCount = await this.drawRound(tournamentEdition, t);
+
+      if (matchesCount === 0) {
+        await this.setTournamentWinner(tournamentEdition, winnerId, t);
+        await this.grantFullPointsToWinner(tournamentEdition, t);
+        await this.assignPointsToPlayers(tournamentEdition, t);
+        await this.closeTournamentEdition(tournamentEdition, t);
+      }
     }
+  };
+
+  public checkIfRoundIsFinished = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    const matches = await Match.findAll({
+      where: {
+        tournamentEditionId: tournamentEdition.id,
+        round: tournamentEdition.round,
+      },
+      transaction: t,
+    });
+
+    const unfinishedMatches = matches.filter((match) => !match.finished);
+
+    return unfinishedMatches.length === 0;
   };
 }

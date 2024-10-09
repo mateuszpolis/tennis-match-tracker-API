@@ -7,11 +7,11 @@ export default class AuthService {
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
-  ) {
+  ): any {
     const token = req.cookies.jwt;
 
     if (!token) {
-      res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
@@ -19,7 +19,7 @@ export default class AuthService {
       req.user = (decoded as jwt.JwtPayload).user;
       next();
     } catch (err) {
-      res.status(401).json({ message: "Invalid token" });
+      return res.status(401).json({ message: "Invalid token" });
     }
   }
 

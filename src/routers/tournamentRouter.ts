@@ -63,7 +63,7 @@ class TournamentRouter {
     res: Response
   ): Promise<any> => {
     const input = req.body as TournamentCreationAttributes;
-    
+
     const existingTournament = await Tournament.findOne({
       where: {
         name: input.name,
@@ -154,6 +154,7 @@ class TournamentRouter {
 
       return res.status(200).json(tournament);
     } catch (e: any) {
+      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });
@@ -240,6 +241,7 @@ class TournamentRouter {
         );
       return res.status(200).json(tournamentEditions);
     } catch (e: any) {
+      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });
@@ -267,6 +269,7 @@ class TournamentRouter {
 
       return res.status(200).json(tournamentEdition);
     } catch (e: any) {
+      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });

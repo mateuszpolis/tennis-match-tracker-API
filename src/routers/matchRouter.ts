@@ -54,6 +54,7 @@ class MatchRouter {
       await t.commit();
       return res.status(200).json({ message: "Match updated successfully" });
     } catch (e: any) {
+      console.log(e);
       await t.rollback();
       return res
         .status(500)

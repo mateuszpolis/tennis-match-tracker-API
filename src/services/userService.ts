@@ -33,4 +33,11 @@ export default class UserService {
   public getUserById = async (id: number) => {
     return await User.findByPk(id);
   };
+
+  public getRanking = async () => {
+    return await User.findAll({
+      attributes: ["id", "name", "surname", "rankingPoints"],
+      order: [["rankingPoints", "DESC"]],
+    });
+  };
 }

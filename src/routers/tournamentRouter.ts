@@ -8,15 +8,18 @@ import TournamentService from "../services/tournamentService";
 import sequelize from "../config/database";
 import { TournamentEditionCreationAttributes } from "../models/TournamentEdition";
 import User from "../models/User";
+import GroundService from "../services/groundService";
 
 class TournamentRouter {
   public router = express.Router();
   private tournamentService;
   private authService;
+  private groundService;
 
   constructor() {
     this.tournamentService = new TournamentService();
     this.authService = new AuthService();
+    this.groundService = new GroundService();
     this.initializeRoutes();
   }
 
@@ -74,6 +77,14 @@ class TournamentRouter {
       return res
         .status(400)
         .json({ message: "Tournament with this name already exists" });
+    }
+
+    const tennisGround = await this.groundService.getGroundById(
+      input.tennisGroundId
+    );
+
+    if (!tennisGround) {
+      return res.status(404).json({ message: "Tennis ground does not exist" });
     }
 
     const t = await sequelize.transaction();
@@ -154,7 +165,6 @@ class TournamentRouter {
 
       return res.status(200).json(tournament);
     } catch (e: any) {
-      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });
@@ -241,7 +251,6 @@ class TournamentRouter {
         );
       return res.status(200).json(tournamentEditions);
     } catch (e: any) {
-      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });
@@ -269,7 +278,6 @@ class TournamentRouter {
 
       return res.status(200).json(tournamentEdition);
     } catch (e: any) {
-      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });
@@ -374,21 +382,21 @@ class TournamentRouter {
         t
       );
 
-      let numberOfMatches = 0;
-
-      let round = tournamentEdition.round;
       let maxRounds = Math.log2(tournamentEdition.maximumNumberOfContestants);
-      do {
-        numberOfMatches = await this.tournamentService.drawRound(
+      while (tournamentEdition.round <= maxRounds) {
+        const nOfMatchesInRound = await this.tournamentService.drawRound(
           tournamentEdition,
           t
         );
-
-        round++;
-      } while (numberOfMatches === 0 && round <= maxRounds);
+        if (nOfMatchesInRound !== 0) {
+          break;
+        } else {
+          tournamentEdition.round += 1;
+          await tournamentEdition.save({ transaction: t });
+        }
+      }
 
       await t.commit();
-
       return res
         .status(200)
         .json({ message: "Tournament started successfully" });

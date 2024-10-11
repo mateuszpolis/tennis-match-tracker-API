@@ -1,6 +1,6 @@
 import TournamentEdition from "../models/TournamentEdition";
 import Match, { MatchCreationAttributes } from "../models/Match";
-import { Transaction } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import TournamentService from "./tournamentService";
 
 export default class MatchService {
@@ -68,5 +68,37 @@ export default class MatchService {
       { finished: true },
       { where: { id }, transaction: t }
     );
-  };  
+  };
+
+  public getLastMatchesBetweenPlayers = async (
+    player1Id: number,
+    player2Id: number,
+    n: number
+  ) => {
+    return await Match.findAll({
+      where: {
+        [Op.or]: [
+          {
+            firstPlayerId: player1Id,
+            secondPlayerId: player2Id,
+          },
+          {
+            firstPlayerId: player2Id,
+            secondPlayerId: player1Id,
+          },
+        ],
+      },
+      order: [["date", "DESC"]],
+      limit: n,
+      include: [
+        "firstPlayer",
+        "secondPlayer",
+        {
+          model: TournamentEdition,
+          as: "tournamentEdition",
+          include: ["tournament"],
+        },
+      ],
+    });
+  };
 }

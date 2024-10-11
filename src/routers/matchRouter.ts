@@ -83,7 +83,18 @@ class MatchRouter {
 
     try {
       const match = await this.matchService.getMatchById(parseInt(id));
-      return res.status(200).json(match);
+      if (!match) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+      const lastMatches = await this.matchService.getLastMatchesBetweenPlayers(
+        match.firstPlayerId,
+        match.secondPlayerId,
+        5
+      );
+      return res.status(200).json({
+        match,
+        lastMatches,
+      });
     } catch (e: any) {
       return res
         .status(500)

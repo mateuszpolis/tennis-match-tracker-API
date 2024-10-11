@@ -84,6 +84,10 @@ export default class TournamentService {
               model: Tournament,
               as: "tournament",
             },
+            {
+              model: User,
+              as: "winner",
+            },
           ],
         },
         {
@@ -182,6 +186,12 @@ export default class TournamentService {
       whereClause.startDate = { [Op.gt]: startDateAfter };
     }
 
+    if (filterOptions.isFinished === "yes") {
+      whereClause.winnerId = { [Op.not]: null };
+    } else if (filterOptions.isFinished === "no") {
+      whereClause.winnerId = null;
+    }
+
     const orderClause: any[] = [];
     if (sortByStartDate) {
       orderClause.push(["startDate", sortByStartDate]);
@@ -213,6 +223,10 @@ export default class TournamentService {
         {
           model: Tournament,
           as: "tournament",
+        },
+        {
+          model: User,
+          as: "winner",
         },
       ],
     });
@@ -324,6 +338,7 @@ export default class TournamentService {
     const players = await UserTournamentEdition.findAll({
       where: {
         tournamentEditionId: tournamentEdition.id,
+        round: tournamentEdition.round,
       },
       include: [
         {
@@ -351,65 +366,88 @@ export default class TournamentService {
       tournamentEdition,
       t
     );
+    console.log(players.length, "players for round", tournamentEdition.round);
 
     const pointsForRound = this.getPointsForRound(
       tournamentEdition.round,
       tournamentEdition
     );
 
+    console.log("Points for this round:", pointsForRound);
+
     for (const player of players) {
-      player.pointsReceived += pointsForRound;
+      player.pointsReceived = pointsForRound;
       await player.save({ transaction: t });
     }
 
     if (numberOfMatches >= players.length) {
-      players.forEach((player) => {
+      for (const player of players) {
         player.round += 1;
-        player.save({
+        await player.save({
           transaction: t,
         });
-      });
-      tournamentEdition.round += 1;
-      tournamentEdition.save({
-        transaction: t,
-      });
+      }
 
       return 0;
     }
 
-    const halfIndex = Math.ceil(players.length / 2);
-    const group1 = players.slice(0, halfIndex);
-    const group2 = players.slice(halfIndex);
-
-    const matches = [];
-
-    for (let i = 0; i < group1.length; i++) {
-      const player1 = group1[i];
-
-      if (i < group2.length) {
-        const player2 = group2[group2.length - 1 - i];
-
-        const match = {
-          player1Id: player1.userId,
-          player2Id: player2.userId,
-          round: tournamentEdition.round,
-        };
-
-        matches.push(match);
+    const group1 = [] as UserTournamentEdition[];
+    const group2 = [] as UserTournamentEdition[];
+    for (let i = 0; i < players.length; i++) {
+      if (i % 2 === 0) {
+        group1.push(players[i]);
       } else {
-        player1.round += 1;
-        await player1.save({ transaction: t });
+        group2.push(players[i]);
       }
     }
+
+    const matches = [] as {
+      player1Id: number;
+      player2Id: number;
+      round: number;
+    }[];
+
+    if (group1.length === 1 && group2.length === 1) {
+      matches.push({
+        player1Id: group1[0].userId,
+        player2Id: group2[0].userId,
+        round: tournamentEdition.round,
+      });
+    } else {
+      for (let i = 0; i < group1.length / 2; i++) {
+        if (i >= group1.length - 1 - i) {
+          group1[i].round += 1;
+          await group1[i].save({ transaction: t });
+        } else {
+          matches.push({
+            player1Id: group1[i].userId,
+            player2Id: group1[group1.length - i - 1].userId,
+            round: tournamentEdition.round,
+          });
+        }
+      }
+
+      for (let i = 0; i < group2.length / 2; i++) {
+        if (i >= group2.length - 1 - i) {
+          group2[i].round += 1;
+          await group2[i].save({ transaction: t });
+        } else {
+          matches.push({
+            player1Id: group2[i].userId,
+            player2Id: group2[group2.length - i - 1].userId,
+            round: tournamentEdition.round,
+          });
+        }
+      }
+    }
+
+    console.log("Round drawn with", matches.length, "matches");
 
     await this.matchService.createMatchesForTournament(
       tournamentEdition,
       matches,
       t
     );
-
-    tournamentEdition.round += 1;
-    await tournamentEdition.save({ transaction: t });
 
     return matches.length;
   };
@@ -455,7 +493,7 @@ export default class TournamentService {
     }
 
     player.round += 1;
-    player.pointsReceived += this.getPointsForRound(
+    player.pointsReceived = this.getPointsForRound(
       player.round,
       tournamentEdition
     );
@@ -498,26 +536,6 @@ export default class TournamentService {
     }
   };
 
-  public grantFullPointsToWinner = async (
-    tournamentEdition: TournamentEdition,
-    t: Transaction
-  ) => {
-    const winner = await UserTournamentEdition.findOne({
-      where: {
-        userId: tournamentEdition.winnerId,
-        tournamentEditionId: tournamentEdition.id,
-      },
-      transaction: t,
-    });
-
-    if (!winner) {
-      throw new Error("Winner not found");
-    }
-
-    winner.pointsReceived = tournamentEdition.tournament.points;
-    await winner.save({ transaction: t });
-  };
-
   public closeTournamentEdition = async (
     tournamentEdition: TournamentEdition,
     t: Transaction
@@ -547,14 +565,43 @@ export default class TournamentService {
         ? match.firstPlayerId
         : match.secondPlayerId;
 
+    const winner = await UserTournamentEdition.findByPk(winnerId, {
+      transaction: t,
+    });
+    const loserId =
+      match.firstPlayerScore > match.secondPlayerScore
+        ? match.secondPlayerId
+        : match.firstPlayerId;
+    const loser = await UserTournamentEdition.findByPk(loserId, {
+      transaction: t,
+    });
+
+    if (!winner || !loser) {
+      throw new Error("Player not found");
+    }
+
+    winner.numberOfWins += 1;
+    winner.numberOfMatches += 1;
+    await winner.save({ transaction: t });
+
+    loser.numberOfLosses += 1;
+    loser.numberOfMatches += 1;
+    await loser.save({ transaction: t });
+
     await this.advancePlayerToNextRound(tournamentEdition, winnerId, t);
 
     if (await this.checkIfRoundIsFinished(tournamentEdition, t)) {
+      tournamentEdition.round += 1;
+      await tournamentEdition.save({ transaction: t });
       const matchesCount = await this.drawRound(tournamentEdition, t);
 
       if (matchesCount === 0) {
+        winner.pointsReceived = tournamentEdition.tournament.points;
+        await winner.save({ transaction: t });
+        loser.pointsReceived = tournamentEdition.tournament.points * 0.6;
+        await loser.save({ transaction: t });
+
         await this.setTournamentWinner(tournamentEdition, winnerId, t);
-        await this.grantFullPointsToWinner(tournamentEdition, t);
         await this.assignPointsToPlayers(tournamentEdition, t);
         await this.closeTournamentEdition(tournamentEdition, t);
       }

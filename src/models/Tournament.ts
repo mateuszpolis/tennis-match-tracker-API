@@ -67,6 +67,7 @@ export type TournamentFilterOptions = {
   sortByStartDate?: "asc" | "desc";
   sortByEndDate?: "asc" | "desc";
   startDateAfter?: Date;
+  isFinished?: "yes" | "no" | "all";
 };
 
 export default Tournament;

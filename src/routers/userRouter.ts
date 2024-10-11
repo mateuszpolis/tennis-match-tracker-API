@@ -19,7 +19,23 @@ class UserRouter {
       this.authService.isAuthenticated,
       this.getUsersByQuery
     );
-    this.router.get("/one/:id", this.authService.isAuthenticated, this.getUserById);
+    this.router.get("/ranking", this.getUserRanking);
+    this.router.get(
+      "/one/:id",
+      this.authService.isAuthenticated,
+      this.getUserById
+    );
+  }
+
+  private getUserRanking = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const ranking = await this.userService.getRanking();
+      return res.status(200).json(ranking);
+    } catch(e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
   }
 
   private getUserById = async (req: Request, res: Response): Promise<any> => {

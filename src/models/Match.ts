@@ -43,6 +43,9 @@ class Match
   declare firstPlayerStatsId?: number;
   declare secondPlayerStatsId?: number;
   declare tournamentEditionId?: number;
+
+  declare readonly firstPlayerStats: PlayerStats;
+  declare readonly secondPlayerStats: PlayerStats;
 }
 
 Match.init(

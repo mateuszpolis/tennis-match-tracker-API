@@ -20,6 +20,7 @@ class UserRouter {
       this.getUsersByQuery
     );
     this.router.get("/ranking", this.getUserRanking);
+    this.router.get("/profile/:id", this.getPlayerProfile);
     this.router.get(
       "/one/:id",
       this.authService.isAuthenticated,
@@ -27,16 +28,42 @@ class UserRouter {
     );
   }
 
-  private getUserRanking = async (req: Request, res: Response): Promise<any> => {
+  private getUserRanking = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
     try {
       const ranking = await this.userService.getRanking();
       return res.status(200).json(ranking);
-    } catch(e: any) {
+    } catch (e: any) {
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });
     }
-  }
+  };
+
+  private getPlayerProfile = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { id } = req.params;
+
+    try {
+      const user = await this.userService.getUserById(parseInt(id));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const playerInfo = await this.userService.getPlayerInfo(parseInt(id));
+      const userWithPlayerInfo = { ...user.toJSON(), playerInfo };
+
+      return res.status(200).json(userWithPlayerInfo);
+    } catch (e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
 
   private getUserById = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;

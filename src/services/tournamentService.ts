@@ -137,7 +137,7 @@ export default class TournamentService {
   ) => {
     const editionWithYear = {
       ...tournamentEdition,
-      year: new Date().getFullYear(),
+      year: new Date(tournamentEdition.startDate).getFullYear(),
     };
 
     return await TournamentEdition.create(editionWithYear, {
@@ -366,14 +366,11 @@ export default class TournamentService {
       tournamentEdition,
       t
     );
-    console.log(players.length, "players for round", tournamentEdition.round);
 
     const pointsForRound = this.getPointsForRound(
       tournamentEdition.round,
       tournamentEdition
     );
-
-    console.log("Points for this round:", pointsForRound);
 
     for (const player of players) {
       player.pointsReceived = pointsForRound;
@@ -440,8 +437,6 @@ export default class TournamentService {
         }
       }
     }
-
-    console.log("Round drawn with", matches.length, "matches");
 
     await this.matchService.createMatchesForTournament(
       tournamentEdition,
@@ -548,11 +543,21 @@ export default class TournamentService {
     );
   };
 
-  public tournamentMatchResult = async (match: Match, t: Transaction) => {
+  public tournamentMatchResult = async (matchId: number, t: Transaction) => {
+    const match = await Match.findByPk(matchId, {
+      include: ["firstPlayer", "secondPlayer"],
+      transaction: t,
+    });
+
+    if (!match) {
+      throw new Error("Match not found");
+    }
+
     const tournamentEdition = await TournamentEdition.findByPk(
       match.tournamentEditionId,
       {
         include: ["tournament"],
+        transaction: t,
       }
     );
 
@@ -564,17 +569,29 @@ export default class TournamentService {
       match.firstPlayerScore > match.secondPlayerScore
         ? match.firstPlayerId
         : match.secondPlayerId;
-
-    const winner = await UserTournamentEdition.findByPk(winnerId, {
-      transaction: t,
-    });
     const loserId =
       match.firstPlayerScore > match.secondPlayerScore
         ? match.secondPlayerId
         : match.firstPlayerId;
-    const loser = await UserTournamentEdition.findByPk(loserId, {
+
+    const winner = await UserTournamentEdition.findOne({
+      where: {
+        userId: winnerId,
+        tournamentEditionId: match.tournamentEditionId,
+      },
       transaction: t,
     });
+
+    const loser = await UserTournamentEdition.findOne({
+      where: {
+        userId: loserId,
+        tournamentEditionId: match.tournamentEditionId,
+      },
+      transaction: t,
+    });
+
+    console.log("Winner:", winnerId, "Loser:", loserId);
+    console.log("Result:", match.firstPlayerScore, match.secondPlayerScore);
 
     if (!winner || !loser) {
       throw new Error("Player not found");

@@ -84,7 +84,6 @@ export default class MailService {
         },
       });
     } catch (err) {
-      console.error("Error creating transporter: ", err);
       throw new Error("Error creating transporter");
     }
   }
@@ -131,7 +130,6 @@ export default class MailService {
       <a href="${resetPasswordLink}">Zresetuj hasło</a>
     `;
 
-    console.log("Sending email to: ", email);
     await this.transporter.sendMail({
       from: "Eltimex <noreply@eltimex.pl>",
       to: email,
@@ -139,7 +137,6 @@ export default class MailService {
       text: "Kliknij w link, aby zresetować swoje hasło",
       html: this.getStyledHtml(html),
     });
-    console.log("Email sent");
   }
 
   public async sendConfirmationEmail(email: string, token: string) {

@@ -53,7 +53,6 @@ class AuthRouter {
       user.resetPasswordExpires = new Date(Date.now() + 3600000);
       await user.save();
 
-      console.log(resetToken);
       this.mailService.sendResetPasswordEmail(email, resetToken);
 
       res.status(200).json({ message: "Password reset email sent" });
@@ -115,12 +114,6 @@ class AuthRouter {
 
   private register = async (req: Request, res: Response): Promise<any> => {
     const { name, surname, email, password } = req.body;
-
-    const environment = process.env.NODE_ENV;
-
-    if (environment === "production") {
-      return res.status(503).json({ message: "Rejestracja niedostępna" });
-    }
 
     try {
       const existingUser = await User.findOne({ where: { email } });

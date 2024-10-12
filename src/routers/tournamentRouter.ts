@@ -180,7 +180,7 @@ class TournamentRouter {
     const existingTournament =
       await this.tournamentService.getTournamentEditionForTournamentByYear(
         input.tournamentId,
-        new Date().getFullYear()
+        new Date(input.startDate).getFullYear()
       );
 
     if (existingTournament) {

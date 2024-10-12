@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 
-interface PlayerStatsAttributes {
+export interface PlayerStatsAttributes {
   id: number;
   aces: number;
   doubleFaults: number;
@@ -20,10 +20,13 @@ interface PlayerStatsAttributes {
   returnPointsWon: number;
 }
 
-interface PlayerStatsCreationAttributes extends Optional<PlayerStatsAttributes, "id"> {}
+export interface PlayerStatsCreationAttributes
+  extends Optional<PlayerStatsAttributes, "id"> {}
 
-class PlayerStats extends Model<PlayerStatsAttributes, PlayerStatsCreationAttributes>
-  implements PlayerStatsAttributes {
+class PlayerStats
+  extends Model<PlayerStatsAttributes, PlayerStatsCreationAttributes>
+  implements PlayerStatsAttributes
+{
   declare id: number;
   declare aces: number;
   declare doubleFaults: number;
@@ -51,63 +54,63 @@ PlayerStats.init(
     },
     aces: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     doubleFaults: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     firstServePercentage: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
     },
     pointsWonOnFirstServe: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     pointsWonOnSecondServe: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     breakPointsSaved: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     returnPointsWonOnFirstServe: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     returnPointsWonOnSecondServe: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     breakPointsConverted: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     winners: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     unforcedErrors: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     netPointsWon: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     consecutivePointsWon: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     servicePointsWon: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     returnPointsWon: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
   },
   {
@@ -115,5 +118,23 @@ PlayerStats.init(
     tableName: "player_stats",
   }
 );
+
+export const higherBetter: string[] = [
+  "aces",
+  "firstServePercentage",
+  "pointsWonOnFirstServe",
+  "pointsWonOnSecondServe",
+  "breakPointsSaved",
+  "returnPointsWonOnFirstServe",
+  "returnPointsWonOnSecondServe",
+  "breakPointsConverted",
+  "winners",
+  "netPointsWon",
+  "consecutivePointsWon",
+  "servicePointsWon",
+  "returnPointsWon",
+];
+
+export const lowerBetter: string[] = ["doubleFaults", "unforcedErrors"];
 
 export default PlayerStats;

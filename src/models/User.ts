@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
+import Match from "./Match";
 
 interface UserAttributes {
   id: number;
@@ -47,6 +48,8 @@ class User
   declare confirmationToken: string | null;
   declare resetPasswordToken: string | null;
   declare resetPasswordExpires: Date | null;
+
+  declare readonly createdAt: Date;
 }
 
 User.init(
@@ -104,5 +107,18 @@ User.init(
     tableName: "users",
   }
 );
+
+export type PlayerAbility = {
+  name: string;
+  rating: number;
+};
+
+export type PlayerInfo = {
+  activeSince: Date | null;
+  wins: number;
+  losses: number;
+  gameHistory: Match[];
+  playerPower: PlayerAbility[];
+};
 
 export default User;

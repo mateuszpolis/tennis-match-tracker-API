@@ -2,6 +2,7 @@ import TournamentEdition from "../models/TournamentEdition";
 import Match, { MatchCreationAttributes } from "../models/Match";
 import { Op, Transaction } from "sequelize";
 import TournamentService from "./tournamentService";
+import PlayerStats, { PlayerStatsAttributes } from "../models/PlayerStats";
 
 export default class MatchService {
   public createMatchesForTournament = async (
@@ -29,19 +30,21 @@ export default class MatchService {
     return await Match.bulkCreate(matchData, { transaction: t });
   };
 
-  public getMatchById = async (id: number) => {
+  public getMatchById = async (id: number, t: Transaction) => {
     return await Match.findByPk(id, {
       include: [
         "firstPlayer",
         "secondPlayer",
         "ground",
         "firstPlayerStats",
+        "secondPlayerStats",
         {
           model: TournamentEdition,
           as: "tournamentEdition",
           include: ["tournament"],
-        },
+        },        
       ],
+      transaction: t,
     });
   };
 
@@ -100,5 +103,22 @@ export default class MatchService {
         },
       ],
     });
+  };
+
+  public createOrUpdatePlayerStats = async (
+    existingStatsId: number | undefined,
+    stats: PlayerStatsAttributes,
+    t: Transaction
+  ): Promise<number> => {
+    if (existingStatsId) {
+      await PlayerStats.update(stats, {
+        where: { id: existingStatsId },
+        transaction: t,
+      });
+      return existingStatsId;
+    } else {
+      const newStats = await PlayerStats.create(stats, { transaction: t });
+      return newStats.id;
+    }
   };
 }

@@ -74,6 +74,6 @@ const assignPlayersToTournament = async (
 };
 
 // Call the function
-const tournamentEditionId = 9; // Replace with actual tournamentEditionId
-const numberOfPlayers = 16; // Replace with the number of players you want to assign
+const tournamentEditionId = 19 // Replace with actual tournamentEditionId
+const numberOfPlayers = 15; // Replace with the number of players you want to assign
 assignPlayersToTournament(tournamentEditionId, numberOfPlayers);

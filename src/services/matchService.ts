@@ -1,8 +1,9 @@
 import TournamentEdition from "../models/TournamentEdition";
 import Match, { MatchCreationAttributes } from "../models/Match";
 import { Op, Transaction } from "sequelize";
-import TournamentService from "./tournamentService";
 import PlayerStats, { PlayerStatsAttributes } from "../models/PlayerStats";
+import User from "../models/User";
+import Tournament from "../models/Tournament";
 
 export default class MatchService {
   public createMatchesForTournament = async (
@@ -42,7 +43,7 @@ export default class MatchService {
           model: TournamentEdition,
           as: "tournamentEdition",
           include: ["tournament"],
-        },        
+        },
       ],
       transaction: t,
     });
@@ -120,5 +121,58 @@ export default class MatchService {
       const newStats = await PlayerStats.create(stats, { transaction: t });
       return newStats.id;
     }
+  };
+
+  public getUpcomingMatchesForUser = async (userId: number) => {
+    return await Match.findAll({
+      where: {
+        [Op.or]: [{ firstPlayerId: userId }, { secondPlayerId: userId }],
+        finished: false,
+      },
+      include: [
+        "firstPlayer",
+        "secondPlayer",
+        {
+          model: TournamentEdition,
+          as: "tournamentEdition",
+          include: ["tournament"],
+        },
+      ],
+    });
+  };
+
+  public queryMatches = async (query: string) => {
+    return await Match.findAll({
+      include: [
+        {
+          model: User,
+          as: "firstPlayer",
+        },
+        {
+          model: User,
+          as: "secondPlayer",
+        },
+        {
+          model: TournamentEdition,
+          as: "tournamentEdition",
+          include: [
+            {
+              model: Tournament,
+              as: "tournament",
+            },
+          ],
+        },
+      ],
+      where: {
+        [Op.or]: [
+          { "$firstPlayer.name$": { [Op.like]: `%${query}%` } },
+          { "$secondPlayer.name$": { [Op.like]: `%${query}%` } },
+          {
+            "$tournamentEdition.tournament.name$": { [Op.like]: `%${query}%` },
+          },
+        ],
+      },
+      limit: 5,
+    });
   };
 }

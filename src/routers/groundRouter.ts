@@ -5,6 +5,7 @@ import sequelize from "../config/database";
 import TennisGround, {
   TennisGroundCreationAttributes,
 } from "../models/TennisGround";
+import { UserRole } from "../models/User";
 
 class GroundRouter {
   public router = express.Router();
@@ -24,12 +25,19 @@ class GroundRouter {
     this.router.post(
       "/create",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
       this.createGround
     );
-    this.router.put("/edit", this.authService.isAuthenticated, this.editGround);
+    this.router.put(
+      "/edit",
+      this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
+      this.editGround
+    );
     this.router.delete(
       "/delete/:id",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
       this.deleteGround
     );
   }

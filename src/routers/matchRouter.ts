@@ -5,6 +5,7 @@ import { MatchCreationAttributes } from "../models/Match";
 import sequelize from "../config/database";
 import TournamentService from "../services/tournamentService";
 import { PlayerStatsAttributes } from "models/PlayerStats";
+import { UserRole } from "../models/User";
 
 class MatchRouter {
   public router = express.Router();
@@ -23,10 +24,18 @@ class MatchRouter {
     this.router.post(
       "/create",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin, UserRole.Moderator]),
       this.createMatch
     );
-    this.router.put("/edit", this.authService.isAuthenticated, this.editMatch);
+    this.router.put(
+      "/edit",
+      this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin, UserRole.Moderator]),
+      this.editMatch
+    );
     this.router.get("/:id", this.getMatch);
+    this.router.get("/user/:id", this.getMatchesForUser);
+    this.router.get("/query", this.queryMatches);
   }
 
   private editMatch = async (req: Request, res: Response): Promise<any> => {
@@ -73,18 +82,7 @@ class MatchRouter {
         updateData.secondPlayerStatsId = secondPlayerStatsId;
       }
 
-      console.log(
-        "Before update: ",
-        updateData.firstPlayerScore,
-        updateData.secondPlayerScore
-      );
       await this.matchService.updateMatch(id, updateData, t);
-      console.log(
-        "After update: ",
-        updateData.firstPlayerScore,
-        updateData.secondPlayerScore
-      );
-
       await this.matchService.setFinishedStatus(id, t);
 
       if (match.tournamentEditionId) {
@@ -138,6 +136,45 @@ class MatchRouter {
       });
     } catch (e: any) {
       await t.rollback();
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private getMatchesForUser = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { id } = req.params;
+
+    const t = await sequelize.transaction();
+    try {
+      const matches = await this.matchService.getUpcomingMatchesForUser(
+        parseInt(id)
+      );
+      await t.commit();
+      return res.status(200).json(matches);
+    } catch (e: any) {
+      await t.rollback();
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private queryMatches = async (req: Request, res: Response): Promise<any> => {
+    console.log("QUERY MATCHES");
+    const query = req.query.query as string;
+    console.log(query);
+
+    try {
+      const matches = await this.matchService.queryMatches(query);
+      console.log(matches);
+      return res.status(200).json(matches);
+    } catch (e: any) {
+      console.log("SZKURWA");
+      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });

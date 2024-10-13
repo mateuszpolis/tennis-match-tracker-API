@@ -7,7 +7,7 @@ import Tournament, {
 import TournamentService from "../services/tournamentService";
 import sequelize from "../config/database";
 import { TournamentEditionCreationAttributes } from "../models/TournamentEdition";
-import User from "../models/User";
+import User, { UserRole } from "../models/User";
 import GroundService from "../services/groundService";
 
 class TournamentRouter {
@@ -27,22 +27,38 @@ class TournamentRouter {
     this.router.post(
       "/create",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
       this.createTournament
     );
     this.router.post(
       "/edit",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
       this.editTournament
+    );
+    this.router.delete(
+      "/delete/:id",
+      this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
+      this.deleteTournament
     );
     this.router.post(
       "/create/edition",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
       this.createTournamentEdition
     );
     this.router.post(
       "/edit/edition",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
       this.editTournamentEdition
+    );
+    this.router.delete(
+      "/delete/edition/:id",
+      this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin]),
+      this.deleteTournamentEdition
     );
     this.router.get("/filter", this.getTournaments);
     this.router.get("/edition/filter", this.getTournamentEditions);
@@ -56,8 +72,11 @@ class TournamentRouter {
     this.router.post(
       "/edition/start",
       this.authService.isAuthenticated,
+      this.authService.hasRole([UserRole.Admin, UserRole.Moderator]),
       this.startTournament
     );
+    this.router.get("/edition/user/:id", this.getTournamentEditionsForUser);
+    this.router.get("/query", this.queryTournaments);
   }
 
   // Tournaments
@@ -133,6 +152,46 @@ class TournamentRouter {
     }
   };
 
+  private deleteTournament = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { id } = req.params;
+
+    const tournament = await this.tournamentService.getTournamentById(
+      Number(id)
+    );
+    if (!tournament) {
+      return res.status(404).json({ message: "Tournament not found" });
+    }
+
+    const t = await sequelize.transaction();
+    try {
+      const deleted = await this.tournamentService.deleteTournament(
+        Number(id),
+        t
+      );
+
+      if (!deleted) {
+        await t.rollback();
+        return res.status(404).json({
+          message:
+            "Cannot delete tournament.There might be tournament editions associated with it.",
+        });
+      }
+
+      await t.commit();
+      return res
+        .status(200)
+        .json({ message: "Tournament deleted successfully" });
+    } catch (e: any) {
+      await t.rollback();
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
   private getTournaments = async (
     req: Request,
     res: Response
@@ -192,6 +251,7 @@ class TournamentRouter {
     const t = await sequelize.transaction();
     try {
       await this.tournamentService.createTournamentEdition(input, t);
+
       await t.commit();
       return res
         .status(201)
@@ -352,6 +412,47 @@ class TournamentRouter {
     }
   };
 
+  private deleteTournamentEdition = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const { id } = req.params;
+
+    const tournamentEdition =
+      await this.tournamentService.getTournamentEditionById(Number(id));
+
+    if (!tournamentEdition) {
+      return res.status(404).json({ message: "Tournament edition not found" });
+    }
+
+    const t = await sequelize.transaction();
+    try {
+      const deleted = await this.tournamentService.deleteTournamentEdition(
+        Number(id),
+        t
+      );
+
+      if (!deleted) {
+        await t.rollback();
+        return res.status(404).json({
+          message:
+            "Tournament edition not deleted. There might be matches in the edition",
+        });
+      }
+
+      await t.commit();
+      return res
+        .status(200)
+        .json({ message: "Tournament edition deleted successfully" });
+    } catch (e: any) {
+      await t.rollback();
+
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
   private startTournament = async (
     req: Request,
     res: Response
@@ -382,6 +483,18 @@ class TournamentRouter {
         t
       );
 
+      const previousEdition =
+        await this.tournamentService.getTournamentEditionForTournamentByYear(
+          tournamentEdition.tournamentId,
+          new Date(tournamentEdition.startDate).getFullYear() - 1
+        );
+      if (previousEdition) {
+        await this.tournamentService.removePointsFromPreviousEdition(
+          previousEdition,
+          t
+        );
+      }
+
       let maxRounds = Math.log2(tournamentEdition.maximumNumberOfContestants);
       while (tournamentEdition.round <= maxRounds) {
         const nOfMatchesInRound = await this.tournamentService.drawRound(
@@ -403,6 +516,45 @@ class TournamentRouter {
     } catch (e: any) {
       await t.rollback();
 
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private getTournamentEditionsForUser = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const userId = Number(req.params.id);
+
+    try {
+      const tournamentEditions =
+        await this.tournamentService.getTournamentEditionsForUser(userId);
+      return res.status(200).json(tournamentEditions);
+    } catch (e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private queryTournaments = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    const query = req.query.query as string;
+    
+    try {
+      const tournaments = await this.tournamentService.queryTournaments(query);
+      const tournamentEditions =
+        await this.tournamentService.queryTournamentEditions(query);
+
+      return res.status(200).json({
+        tournaments,
+        tournamentEditions,
+      });
+    } catch (e: any) {
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });

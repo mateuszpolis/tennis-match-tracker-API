@@ -457,7 +457,7 @@ export default class TournamentService {
     const totalRounds = Math.ceil(Math.log2(totalPlayers));
 
     if (round === totalRounds) {
-      return totalPoints;
+      return totalPoints * 0.6;
     }
 
     if (round === totalRounds - 1) {
@@ -590,9 +590,6 @@ export default class TournamentService {
       transaction: t,
     });
 
-    console.log("Winner:", winnerId, "Loser:", loserId);
-    console.log("Result:", match.firstPlayerScore, match.secondPlayerScore);
-
     if (!winner || !loser) {
       throw new Error("Player not found");
     }
@@ -615,8 +612,6 @@ export default class TournamentService {
       if (matchesCount === 0) {
         winner.pointsReceived = tournamentEdition.tournament.points;
         await winner.save({ transaction: t });
-        loser.pointsReceived = tournamentEdition.tournament.points * 0.6;
-        await loser.save({ transaction: t });
 
         await this.setTournamentWinner(tournamentEdition, winnerId, t);
         await this.assignPointsToPlayers(tournamentEdition, t);
@@ -640,5 +635,89 @@ export default class TournamentService {
     const unfinishedMatches = matches.filter((match) => !match.finished);
 
     return unfinishedMatches.length === 0;
+  };
+
+  public deleteTournament = async (id: number, t: Transaction) => {
+    return await Tournament.destroy({ where: { id }, transaction: t });
+  };
+
+  public deleteTournamentEdition = async (
+    tournamentEditionId: number,
+    t: Transaction
+  ) => {
+    return await TournamentEdition.destroy({
+      where: { id: tournamentEditionId },
+      transaction: t,
+    });
+  };
+
+  removePointsFromPreviousEdition = async (
+    tournamentEdition: TournamentEdition,
+    t: Transaction
+  ) => {
+    const players = await UserTournamentEdition.findAll({
+      where: {
+        tournamentEditionId: tournamentEdition.id,
+      },
+      include: [
+        {
+          model: User,
+          as: "user",
+        },
+      ],
+      transaction: t,
+    });
+
+    for (const player of players) {
+      player.user.rankingPoints -= player.pointsReceived;
+      await player.user.save({ transaction: t });
+    }
+  };
+
+  public getTournamentEditionsForUser = async (userId: number) => {
+    return await TournamentEdition.findAll({
+      include: [
+        {
+          model: UserTournamentEdition,
+          as: "players",
+          where: {
+            userId,
+          },
+        },
+        {
+          model: Tournament,
+          as: "tournament",
+        },
+      ],
+      order: [["startDate", "DESC"]],
+    });
+  };
+
+  public queryTournamentEditions = async (query: string) => {
+    return await TournamentEdition.findAll({
+      include: [
+        {
+          model: Tournament,
+          as: "tournament",
+          where: {
+            name: {
+              [Op.like]: `%${query}%`,
+            },
+          },
+        },
+      ],
+      limit: 5,
+    });
+  };
+
+  public queryTournaments = async (query: string) => {
+    return await Tournament.findAll({
+      where: {
+        name: {
+          [Op.like]: `%${query}%`,
+        },
+      },
+      limit: 5,
+    });
   };
 }

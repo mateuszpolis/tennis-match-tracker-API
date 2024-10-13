@@ -84,6 +84,7 @@ export default class UserService {
         losses: 0,
         gameHistory: [],
         playerPower: [],
+        playerRating: 0,
       };
     }
 
@@ -175,12 +176,20 @@ export default class UserService {
       });
     });
 
+    // rating from 1 to 99 based on the average stats
+    const totalStats = playerPower.length;
+    const playerRating = Math.round(
+      (playerPower.reduce((acc, stat) => acc + stat.rating, 0) / totalStats) *
+        99
+    );
+
     return {
       activeSince,
       wins,
       losses,
       gameHistory,
       playerPower,
+      playerRating,
     };
   };
 }

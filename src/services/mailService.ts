@@ -92,10 +92,7 @@ export default class MailService {
     return `${this.style}
       <div>
         <header>
-          <h1>Eltimex</h1>
-          <img src="https://eltimex-dev.s3.eu-central-1.amazonaws.com/logo512.png" alt="Eltimex logo" 
-            width="100" height="100"
-          />
+          <h1>Eltimex</h1>          
         </header>
         ${content}
         <p>Wiadomość wygenerowana automatycznie. Prosimy na nią nie odpowiadać. W razie pytań prosimy o kontakt na adres email lub numer telefonu podany poniżej.</p>

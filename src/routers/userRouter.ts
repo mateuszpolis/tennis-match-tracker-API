@@ -7,9 +7,9 @@ class UserRouter {
   private authService;
   private userService;
 
-  constructor() {
-    this.authService = new AuthService();
-    this.userService = new UserService();
+  constructor(authService: AuthService, userService: UserService) {
+    this.authService = authService;
+    this.userService = userService;
     this.initializeRoutes();
   }
 
@@ -97,4 +97,4 @@ class UserRouter {
   };
 }
 
-export default new UserRouter().router;
+export default UserRouter;

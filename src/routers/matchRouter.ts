@@ -13,10 +13,14 @@ class MatchRouter {
   private matchService;
   private tournamentService;
 
-  constructor() {
-    this.authService = new AuthService();
-    this.matchService = new MatchService();
-    this.tournamentService = new TournamentService();
+  constructor(
+    authService: AuthService,
+    matchService: MatchService,
+    tournamentService: TournamentService
+  ) {
+    this.authService = authService;
+    this.matchService = matchService;
+    this.tournamentService = tournamentService;
     this.initializeRoutes();
   }
 
@@ -177,4 +181,4 @@ class MatchRouter {
   };
 }
 
-export default new MatchRouter().router;
+export default MatchRouter;

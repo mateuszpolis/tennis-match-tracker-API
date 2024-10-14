@@ -12,9 +12,9 @@ class GroundRouter {
   private groundService: GroundService;
   private authService: AuthService;
 
-  constructor() {
-    this.groundService = new GroundService();
-    this.authService = new AuthService();
+  constructor(groundService: GroundService, authService: AuthService) {
+    this.groundService = groundService;
+    this.authService = authService;
     this.initializeRoutes();
   }
 
@@ -45,6 +45,7 @@ class GroundRouter {
 
   private createGround = async (req: Request, res: Response): Promise<any> => {
     const input = req.body as TennisGroundCreationAttributes;
+    console.log(input);
 
     const t = await sequelize.transaction();
     try {
@@ -54,6 +55,7 @@ class GroundRouter {
         .status(201)
         .json({ message: "Tennis ground created successfully" });
     } catch (e: any) {
+      console.log(e);
       await t.rollback();
       return res
         .status(500)
@@ -175,4 +177,4 @@ class GroundRouter {
   };
 }
 
-export default new GroundRouter().router;
+export default GroundRouter;

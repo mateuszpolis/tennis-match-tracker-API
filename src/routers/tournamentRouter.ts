@@ -16,10 +16,14 @@ class TournamentRouter {
   private authService;
   private groundService;
 
-  constructor() {
-    this.tournamentService = new TournamentService();
-    this.authService = new AuthService();
-    this.groundService = new GroundService();
+  constructor(
+    tournamentService: TournamentService,
+    authService: AuthService,
+    groundService: GroundService
+  ) {
+    this.tournamentService = tournamentService;
+    this.authService = authService;
+    this.groundService = groundService;
     this.initializeRoutes();
   }
 
@@ -126,6 +130,11 @@ class TournamentRouter {
     res: Response
   ): Promise<any> => {
     const { id, ...updateData } = req.body;
+
+    const tournament = await this.tournamentService.getTournamentById(id);
+    if (!tournament) {
+      return res.status(404).json({ message: "Tournament not found" });
+    }
 
     const t = await sequelize.transaction();
     try {
@@ -562,4 +571,4 @@ class TournamentRouter {
   };
 }
 
-export default new TournamentRouter().router;
+export default TournamentRouter;

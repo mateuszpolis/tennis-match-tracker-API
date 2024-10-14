@@ -15,8 +15,10 @@ import Match from "../models/Match";
 export default class TournamentService {
   private matchService;
 
-  constructor() {
-    this.matchService = new MatchService();
+  constructor(
+    matchService: MatchService
+  ) {
+    this.matchService = matchService;
   }
 
   public createTournament = async (

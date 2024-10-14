@@ -13,9 +13,9 @@ class AuthRouter {
   private mailService;
   private authService;
 
-  constructor() {
-    this.mailService = new MailService();
-    this.authService = new AuthService();
+  constructor(mailService: MailService, authService: AuthService) {
+    this.mailService = mailService;
+    this.authService = authService;
     this.initializeRoutes();
   }
 
@@ -173,27 +173,20 @@ class AuthRouter {
     }
   };
 
-  private logout = (req: Request, res: Response) => {
+  private logout = (req: Request, res: Response): any => {
     res.clearCookie("jwt");
     res.status(200).json({ message: "Logged out successfully" });
   };
 
-  private getUserDetails = (req: Request, res: Response) => {
-    const token = req.cookies.jwt;
+  private getUserDetails = (req: Request, res: Response): any => {
+    const user = req.user;
 
-    if (!token) {
-      res.status(401).json({ message: "Unauthorized" });
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    try {
-      const decoded = jwt.verify(token, "your_jwt_secret");
-      const user = (decoded as jwt.JwtPayload).user;
-
-      res.status(200).json({ user });
-    } catch (err) {
-      res.status(401).json({ message: "Invalid token" });
-    }
+    return res.status(200).json({ user });
   };
 }
 
-export default new AuthRouter().router;
+export default AuthRouter;

@@ -4,11 +4,18 @@ import passport from "./config/passportConfig";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/database";
 import "./models/associations";
-import tournamentRouter from "./routers/tournamentRouter";
-import groundRouter from "./routers/groundRouter";
-import matchRouter from "./routers/matchRouter";
-import authRouter from "./routers/authRouter";
-import userRouter from "./routers/userRouter";
+import MailService from "./services/mailService";
+import AuthService from "./services/authService";
+import AuthRouter from "./routers/authRouter";
+import GroundService from "./services/groundService";
+import GroundRouter from "./routers/groundRouter";
+import MatchRouter from "./routers/matchRouter";
+import MatchService from "./services/matchService";
+import TournamentService from "./services/tournamentService";
+import TournamentRouter from "./routers/tournamentRouter";
+import UserRouter from "./routers/userRouter";
+import UserService from "./services/userService";
+
 const app: Application = express();
 
 app.use(express.json());
@@ -26,6 +33,27 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+const mailService = new MailService();
+const authService = new AuthService();
+const groundService = new GroundService();
+const matchService = new MatchService();
+const tournamentService = new TournamentService(matchService);
+const userService = new UserService();
+
+const authRouter = new AuthRouter(mailService, authService).router;
+const groundRouter = new GroundRouter(groundService, authService).router;
+const matchRouter = new MatchRouter(
+  authService,
+  matchService,
+  tournamentService
+).router;
+const tournamentRouter = new TournamentRouter(
+  tournamentService,
+  authService,
+  groundService
+).router;
+const userRouter = new UserRouter(authService, userService).router;
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);

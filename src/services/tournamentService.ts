@@ -168,7 +168,7 @@ export default class TournamentService {
       surface,
       sortByStartDate,
       sortByEndDate,
-      startDateAfter,
+      endDateAfter,
     } = filterOptions;
 
     const whereClause: any = {};
@@ -182,8 +182,8 @@ export default class TournamentService {
     if (surface) {
       whereClause["$Tournament.surface$"] = surface;
     }
-    if (startDateAfter) {
-      whereClause.startDate = { [Op.gt]: startDateAfter };
+    if (endDateAfter) {
+      whereClause.endDate = { [Op.gt]: endDateAfter };
     }
 
     if (filterOptions.isFinished === "yes") {
@@ -701,7 +701,7 @@ export default class TournamentService {
           as: "tournament",
           where: {
             name: {
-              [Op.like]: `%${query}%`,
+              [Op.iLike]: `%${query}%`,
             },
           },
         },
@@ -714,7 +714,7 @@ export default class TournamentService {
     return await Tournament.findAll({
       where: {
         name: {
-          [Op.like]: `%${query}%`,
+          [Op.iLike]: `%${query}%`,
         },
       },
       limit: 5,

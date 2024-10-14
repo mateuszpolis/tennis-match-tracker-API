@@ -62,6 +62,7 @@ Match.init(
         key: "id",
       },
       allowNull: false,
+      onDelete: 'RESTRICT',
     },
     secondPlayerId: {
       type: DataTypes.INTEGER,
@@ -70,6 +71,7 @@ Match.init(
         key: "id",
       },
       allowNull: false,
+      onDelete: 'RESTRICT',
     },
     date: {
       type: DataTypes.DATE,
@@ -90,6 +92,7 @@ Match.init(
         key: "id",
       },
       allowNull: false,
+      onDelete: 'RESTRICT',
     },
     surface: {
       type: DataTypes.ENUM("CLAY", "GRASS", "HARD"),
@@ -118,6 +121,7 @@ Match.init(
         key: "id",
       },
       allowNull: true,
+      onDelete: 'RESTRICT',
     },
     round: {
       type: DataTypes.INTEGER,

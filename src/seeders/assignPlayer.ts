@@ -28,7 +28,6 @@ const assignPlayersToTournament = async (
       tournamentEditionId
     );
     if (!tournamentEdition) {
-      console.log("Tournament edition does not exist");
       return;
     }
 
@@ -36,7 +35,6 @@ const assignPlayersToTournament = async (
       tournamentEdition.currentNumberOfContestants + numberOfPlayers >
       tournamentEdition.maximumNumberOfContestants
     ) {
-      console.log("Not enough spots in the tournament");
       return;
     }
 

@@ -20,7 +20,7 @@ export default class MailService {
       padding: 5px;
     }
     h1, h2 {
-      color: #003566;
+      color: #3d348b;
     }
     ul {
       list-style-type: none;
@@ -42,7 +42,7 @@ export default class MailService {
       color: #666;
     }
     footer a {
-      color: #003566;
+      color: #3d348b;
       text-decoration: none;
       margin: 0 10px;
     }
@@ -92,62 +92,54 @@ export default class MailService {
     return `${this.style}
       <div>
         <header>
-          <h1>Eltimex</h1>          
+          <h1>Tennis Tournament Manager</h1>          
         </header>
         ${content}
-        <p>Wiadomość wygenerowana automatycznie. Prosimy na nią nie odpowiadać. W razie pytań prosimy o kontakt na adres email lub numer telefonu podany poniżej.</p>
         <footer>
-          <p>© 2024 Eltimex. Wszelkie prawa zastrzeżone.</p>
-          <div class="footer-links">
-            <a href="mailto:Eltimex <noreply@eltimex.pl>">
-              Napisz do nas: Eltimex <noreply@eltimex.pl>
-            </a>
-            <a href="tel:+48609773932">
-              Zadzwoń do nas: +48 609 773 932              
-            </a>
-          </div>
+          <p>© 2024 Mateusz Polis</p>
+          
         </footer>
       </div>`;
   }
 
   public sendPasswordChangedEmail = async (email: string) => {
     await this.transporter.sendMail({
-      from: "Eltimex <noreply@eltimex.pl>",
+      from: "Tennis Tournament Manager <noreply@ttm.pl>",
       to: email,
-      subject: "Twoje hasło zostało zmienione",
-      text: "Twoje hasło zostało zmienione",
-      html: this.getStyledHtml("<p>Twoje hasło zostało zmienione</p>"),
+      subject: "Your password has been changed",
+      text: "Your password has been changed",
+      html: this.getStyledHtml("<p>Your password has been changed</p>"),
     });
   };
 
   public async sendResetPasswordEmail(email: string, token: string) {
-    const resetPasswordLink = `https://eltimex.pl/resetuj-haslo/${token}`;
+    const resetPasswordLink = `http://localhost:3000/reset-password/${token}`;
     const html = `
-      <p>Kliknij w link, aby zresetować swoje hasło:</p>
-      <a href="${resetPasswordLink}">Zresetuj hasło</a>
+      <p>Click the link to reset your password:</p>
+      <a href="${resetPasswordLink}">Reset password</a>
     `;
 
     await this.transporter.sendMail({
-      from: "Eltimex <noreply@eltimex.pl>",
+      from: "Tennis Tournament Manager <noreply@ttm.pl>",
       to: email,
-      subject: "Zresetuj swoje hasło",
-      text: "Kliknij w link, aby zresetować swoje hasło",
+      subject: "Reset your password",
+      text: "Click the link to reset your password",
       html: this.getStyledHtml(html),
     });
   }
 
   public async sendConfirmationEmail(email: string, token: string) {
-    const confirmationLink = `https://eltimex.pl/potwierdz-email/${token}`;
+    const confirmationLink = `http://localhost:3000/confirm-email/${token}`;
     const html = `
-      <p>Kliknij w link, aby potwierdzić swój email:</p>
-      <a href="${confirmationLink}">Potwierdź email</a>
+      <p>Click the link to confirm your email:</p>
+      <a href="${confirmationLink}">Confirm email</a>
     `;
 
     await this.transporter.sendMail({
-      from: "Eltimex <noreply@eltimex.pl>",
+      from: "Tennis Tournament Manager <noreply@ttm.pl>",
       to: email,
-      subject: "Potwierdź swój email",
-      text: "Kliknij w link, aby potwierdzić swój email",
+      subject: "Confirm your email",
+      text: "Click the link to confirm your email",
       html: this.getStyledHtml(html),
     });
   }

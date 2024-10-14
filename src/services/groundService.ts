@@ -52,4 +52,16 @@ export default class GroundService {
 
     return deletedRows > 0;
   };
+
+  public queryGrounds = async (query: string) => {
+    return await TennisGround.findAll({
+      where: {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${query}%` } },
+          { city: { [Op.iLike]: `%${query}%` } },
+          { country: { [Op.iLike]: `%${query}%` } },
+        ],
+      },
+    });
+  };
 }

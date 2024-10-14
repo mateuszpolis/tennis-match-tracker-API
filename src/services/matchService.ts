@@ -165,10 +165,10 @@ export default class MatchService {
       ],
       where: {
         [Op.or]: [
-          { "$firstPlayer.name$": { [Op.like]: `%${query}%` } },
-          { "$secondPlayer.name$": { [Op.like]: `%${query}%` } },
+          { "$firstPlayer.name$": { [Op.iLike]: `%${query}%` } },
+          { "$secondPlayer.name$": { [Op.iLike]: `%${query}%` } },
           {
-            "$tournamentEdition.tournament.name$": { [Op.like]: `%${query}%` },
+            "$tournamentEdition.tournament.name$": { [Op.iLike]: `%${query}%` },
           },
         ],
       },

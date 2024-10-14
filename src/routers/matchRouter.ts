@@ -33,9 +33,9 @@ class MatchRouter {
       this.authService.hasRole([UserRole.Admin, UserRole.Moderator]),
       this.editMatch
     );
-    this.router.get("/:id", this.getMatch);
-    this.router.get("/user/:id", this.getMatchesForUser);
     this.router.get("/query", this.queryMatches);
+    this.router.get("/user/:id", this.getMatchesForUser);
+    this.router.get("/:id", this.getMatch);
   }
 
   private editMatch = async (req: Request, res: Response): Promise<any> => {
@@ -164,17 +164,12 @@ class MatchRouter {
   };
 
   private queryMatches = async (req: Request, res: Response): Promise<any> => {
-    console.log("QUERY MATCHES");
     const query = req.query.query as string;
-    console.log(query);
 
     try {
       const matches = await this.matchService.queryMatches(query);
-      console.log(matches);
       return res.status(200).json(matches);
     } catch (e: any) {
-      console.log("SZKURWA");
-      console.log(e);
       return res
         .status(500)
         .json({ message: "Server error", error: e.message });

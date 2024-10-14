@@ -68,6 +68,7 @@ TournamentEdition.init(
         model: Tournament,
         key: "id",
       },
+      onDelete: 'RESTRICT',
     },
     editionName: {
       type: DataTypes.STRING,

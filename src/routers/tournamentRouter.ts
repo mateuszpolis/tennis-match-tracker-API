@@ -544,7 +544,7 @@ class TournamentRouter {
     res: Response
   ): Promise<any> => {
     const query = req.query.query as string;
-    
+
     try {
       const tournaments = await this.tournamentService.queryTournaments(query);
       const tournamentEditions =

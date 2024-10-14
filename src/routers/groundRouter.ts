@@ -20,8 +20,9 @@ class GroundRouter {
 
   private initializeRoutes() {
     this.router.get("/", this.getTennisGrounds);
-    this.router.get("/:id", this.getTennisGround);
+    this.router.get("/query", this.queryGrounds);
     this.router.get("/name/:name", this.getGroundsByName);
+    this.router.get("/:id", this.getTennisGround);
     this.router.post(
       "/create",
       this.authService.isAuthenticated,
@@ -152,6 +153,19 @@ class GroundRouter {
     try {
       const grounds = await this.groundService.getGroundsByName(name);
 
+      return res.status(200).json(grounds);
+    } catch (e: any) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: e.message });
+    }
+  };
+
+  private queryGrounds = async (req: Request, res: Response): Promise<any> => {
+    const query = req.query.query as string;
+
+    try {
+      const grounds = await this.groundService.queryGrounds(query);
       return res.status(200).json(grounds);
     } catch (e: any) {
       return res

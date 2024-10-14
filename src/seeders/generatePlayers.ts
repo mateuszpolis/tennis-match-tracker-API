@@ -32,7 +32,7 @@ const generatePlayers = async () => {
   try {
     await User.bulkCreate(players);
 
-    console.log("100 players registered successfully");
+
   } catch (err) {
     console.error("Error inserting players:", err);
   }

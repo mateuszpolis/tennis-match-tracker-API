@@ -14,11 +14,7 @@ class UserRouter {
   }
 
   private initializeRoutes() {
-    this.router.get(
-      "/search",
-      this.authService.isAuthenticated,
-      this.getUsersByQuery
-    );
+    this.router.get("/search", this.getUsersByQuery);
     this.router.get("/ranking", this.getUserRanking);
     this.router.get("/profile/:id", this.getPlayerProfile);
     this.router.get(
@@ -85,10 +81,13 @@ class UserRouter {
     req: Request,
     res: Response
   ): Promise<any> => {
-    const { query } = req.query as { query?: string };
+    const { query = "", limit = 10 } = req.query as {
+      query?: string;
+      limit?: number;
+    };
 
     try {
-      const users = await this.userService.getUsersByQuery(query || "");
+      const users = await this.userService.getUsersByQuery(query, limit);
       return res.status(200).json(users);
     } catch (e: any) {
       return res

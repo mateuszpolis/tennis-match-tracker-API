@@ -48,6 +48,7 @@ Tournament.init(
         key: "id",
       },
       allowNull: false,
+      onDelete: 'RESTRICT',
     },
     points: {
       type: DataTypes.INTEGER,
@@ -66,7 +67,7 @@ export type TournamentFilterOptions = {
   surface?: Surface;
   sortByStartDate?: "asc" | "desc";
   sortByEndDate?: "asc" | "desc";
-  startDateAfter?: Date;
+  endDateAfter?: Date;
   isFinished?: "yes" | "no" | "all";
 };
 

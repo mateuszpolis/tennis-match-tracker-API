@@ -4,7 +4,7 @@ import Match from "../models/Match";
 import PlayerStats, { higherBetter } from "../models/PlayerStats";
 
 export default class UserService {
-  public getUsersByQuery = async (query: string = "") => {
+  public getUsersByQuery = async (query: string = "", limit: number = 5) => {
     if (!query) {
       return await User.findAll();
     }
@@ -14,21 +14,22 @@ export default class UserService {
         [Op.or]: [
           {
             name: {
-              [Op.like]: `%${query}%`,
+              [Op.iLike]: `%${query}%`,
             },
           },
           {
             surname: {
-              [Op.like]: `%${query}%`,
+              [Op.iLike]: `%${query}%`,
             },
           },
           {
             email: {
-              [Op.like]: `%${query}%`,
+              [Op.iLike]: `%${query}%`,
             },
           },
         ],
       },
+      limit,
     });
   };
 

@@ -12,7 +12,6 @@ const assignPlayersToTournament = async (
   numberOfPlayers: number
 ) => {
   try {
-    // Fetch all player IDs
     const allPlayers = await User.findAll({ attributes: ["id"] });
     const playerIds = allPlayers.map((player) => player.id);
 
@@ -20,11 +19,9 @@ const assignPlayersToTournament = async (
       return;
     }
 
-    // Shuffle and pick a random subset of player IDs
     const shuffledPlayers = playerIds.sort(() => 0.5 - Math.random());
     const selectedPlayers = shuffledPlayers.slice(0, numberOfPlayers);
 
-    // Fetch tournament edition
     const tournamentEdition = await tournamentService.getTournamentEditionById(
       tournamentEditionId
     );
@@ -41,7 +38,6 @@ const assignPlayersToTournament = async (
 
     const t = await sequelize.transaction();
     try {
-      // Sign up each selected player to the tournament
       for (const playerId of selectedPlayers) {
         const existingRecord =
           await tournamentService.getUserTournamentEditionRecord(
@@ -72,7 +68,6 @@ const assignPlayersToTournament = async (
   }
 };
 
-// Call the function
 const tournamentEditionId = 1; // Replace with actual tournamentEditionId
 const numberOfPlayers = 16; // Replace with the number of players you want to assign
 assignPlayersToTournament(tournamentEditionId, numberOfPlayers);

@@ -9,16 +9,32 @@ git clone https://github.com/yourusername/tennis-match-tracker-API.git
 cd tennis-match-tracker-API
 ```
 
-2. **Run the docker-compose file:**
+2. **Setup the environment:**
+
+```sh
+cp .env.dist .env
+```
+
+The application uses a mail service to send emails. To set up the mail service, you need to provide the following environment variables in the `.env` file:
+
+EMAIL_USER=''
+EMAIL_PASS=''
+EMAIL_HOST=''
+EMAIL_PORT=''
+
+The emails are used for veryfing the user's email address and for sending the password reset link. Because the application is in development, the email verification is not necessary to log in. The password reset link is necessary to change the password, however, if the NODE_ENV is set to 'development', the password reset link will be displayed in the console.
+
+3. **Run the docker-compose file:**
 
 ```sh
 docker-compose up -d
 ```
+
 The docker-compose file will create two containers: one for the API and one for the database.
 
 Your Tennis Match Tracker API should now be up and running!
 
-3. **Loading the test database:**
+4. **Loading the test database:**
 
 ```sh
 cd tennis-match-tracker-API
@@ -35,20 +51,25 @@ To interact with the Tennis Match Tracker API, you can use the frontend applicat
 
 [Frontend Repository](https://github.com/mateuszpolis/tennis-match-tracker)
 
-2. **Using the test database:**
+2. **Using the application with test database:**
 
-To use the test database, you can log in with the following
+To make use the test database, you can log in with the following
 credentials:
+
 Admin:
+
 - email: admin@mail.com
 - password: Secure.Password1
 
 Moderator:
+
 - email: moderator@mail.com
 - password: Secure.Password1
 
 User:
-There are a lot of users. You can get them from the Rankings. 
+
+There are a lot of users. You can get them from the Rankings.
+
 - email format: name_surname@mail.com
 - password: Secure.Password1
 

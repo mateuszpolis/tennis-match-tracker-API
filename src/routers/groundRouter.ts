@@ -45,7 +45,6 @@ class GroundRouter {
 
   private createGround = async (req: Request, res: Response): Promise<any> => {
     const input = req.body as TennisGroundCreationAttributes;
-    console.log(input);
 
     const t = await sequelize.transaction();
     try {
@@ -55,7 +54,6 @@ class GroundRouter {
         .status(201)
         .json({ message: "Tennis ground created successfully" });
     } catch (e: any) {
-      console.log(e);
       await t.rollback();
       return res
         .status(500)

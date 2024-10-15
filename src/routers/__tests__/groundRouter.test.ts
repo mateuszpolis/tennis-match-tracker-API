@@ -5,15 +5,13 @@ import AuthService from "../../services/__mocks__/authService";
 import GroundService from "../../services/__mocks__/groundService";
 import cookieParser from "cookie-parser";
 
-// Mock dependencies
-jest.mock("../../services/groundService"); // Use the manual mock for GroundService
-jest.mock("../../services/authService"); // Use the manual mock for AuthService
+jest.mock("../../services/groundService");
+jest.mock("../../services/authService");
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// Instantiate the mocked services
 const authService = new AuthService();
 const groundService = new GroundService();
 

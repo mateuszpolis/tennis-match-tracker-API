@@ -60,7 +60,6 @@ class AuthRouter {
 
       res.status(200).json({ message: "Password reset email sent" });
     } catch (err: any) {
-      console.log(err);
       res.status(500).json({ message: "Server error", error: err.message });
     }
   };

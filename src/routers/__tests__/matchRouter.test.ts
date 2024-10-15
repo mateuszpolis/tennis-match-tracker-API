@@ -6,8 +6,8 @@ import cookieParser from "cookie-parser";
 import MatchService from "../../services/__mocks__/matchService";
 import TournamentService from "../../services/__mocks__/tournamentService";
 
-jest.mock("../../services/groundService"); // Use the manual mock for GroundService
-jest.mock("../../services/authService"); // Use the manual mock for AuthService
+jest.mock("../../services/groundService");
+jest.mock("../../services/authService");
 
 const app = express();
 app.use(express.json());
@@ -37,9 +37,7 @@ describe("MatchRouter", () => {
     });
 
     it("should return 500 if there is a server error", async () => {
-      matchService.createMatch.mockRejectedValueOnce(
-        new Error("Server error")
-      );
+      matchService.createMatch.mockRejectedValueOnce(new Error("Server error"));
       const response = await request(app)
         .post("/matches/create")
         .set("Cookie", "jwt=validtoken")

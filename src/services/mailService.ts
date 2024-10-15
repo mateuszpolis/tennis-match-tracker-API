@@ -73,9 +73,11 @@ export default class MailService {
     this.host = process.env.EMAIL_HOST as string;
     this.port = process.env.EMAIL_PORT as string;
 
-    console.log(this.user, this.pass, this.host, this.port);
-
     try {
+      if (!this.user || !this.pass || !this.host || !this.port) {
+        throw new Error("Missing email configuration");
+      }
+
       this.transporter = nodemailer.createTransport({
         host: this.host,
         port: parseInt(this.port),
@@ -86,7 +88,7 @@ export default class MailService {
       });
       console.log("Transporter created");
     } catch (err) {
-      throw new Error("Error creating transporter");
+      console.error("Error creating transporter", err);
     }
   }
 
@@ -105,6 +107,10 @@ export default class MailService {
   }
 
   public sendPasswordChangedEmail = async (email: string) => {
+    if (!this.transporter) {
+      console.error("Transporter not created");
+      return;
+    }
     await this.transporter.sendMail({
       from: "Tennis Tournament Manager <noreply@ttm.pl>",
       to: email,
@@ -121,6 +127,13 @@ export default class MailService {
       <a href="${resetPasswordLink}">Reset password</a>
     `;
 
+    if (!this.transporter) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Password reset link:", resetPasswordLink);
+      }
+      console.error("Transporter not created");
+      return;
+    }
     await this.transporter.sendMail({
       from: "Tennis Tournament Manager <noreply@ttm.pl>",
       to: email,
@@ -137,6 +150,10 @@ export default class MailService {
       <a href="${confirmationLink}">Confirm email</a>
     `;
 
+    if (!this.transporter) {
+      console.error("Transporter not created");
+      return;
+    }
     await this.transporter.sendMail({
       from: "Tennis Tournament Manager <noreply@ttm.pl>",
       to: email,

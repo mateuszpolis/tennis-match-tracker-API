@@ -15,7 +15,7 @@ export default class AuthService {
     }
 
     try {
-      const decoded = jwt.verify(token, "your_jwt_secret");
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
       const userId = (decoded as jwt.JwtPayload).user.id;
 
       const user = await User.findByPk(userId);

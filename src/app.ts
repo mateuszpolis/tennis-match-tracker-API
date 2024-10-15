@@ -1,8 +1,8 @@
 import express, { Application } from "express";
+import sequelize from "./config/database";
 import cors from "cors";
 import passport from "./config/passportConfig";
 import cookieParser from "cookie-parser";
-import sequelize from "./config/database";
 import "./models/associations";
 import MailService from "./services/mailService";
 import AuthService from "./services/authService";
@@ -66,9 +66,7 @@ app.get("/", (req, res) => {
 });
 
 (async () => {
-  try {
-    await sequelize.sync({ force: false });
-
+  try {  
     app.listen(5010, () => {
       console.log("Server is running on port 5010");
     });

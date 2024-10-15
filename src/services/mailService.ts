@@ -73,16 +73,18 @@ export default class MailService {
     this.host = process.env.EMAIL_HOST as string;
     this.port = process.env.EMAIL_PORT as string;
 
+    console.log(this.user, this.pass, this.host, this.port);
+
     try {
       this.transporter = nodemailer.createTransport({
         host: this.host,
         port: parseInt(this.port),
-        // secure: false,
         auth: {
           user: this.user,
           pass: this.pass,
         },
       });
+      console.log("Transporter created");
     } catch (err) {
       throw new Error("Error creating transporter");
     }

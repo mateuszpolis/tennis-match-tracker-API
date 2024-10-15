@@ -2,8 +2,10 @@ import sequelize from "../config/database";
 import User from "../models/User";
 import TournamentService from "../services/tournamentService";
 import "../models/associations";
+import MatchService from "../services/matchService";
 
-const tournamentService = new TournamentService();
+const matchService = new MatchService();
+const tournamentService = new TournamentService(matchService);
 
 const assignPlayersToTournament = async (
   tournamentEditionId: number,
@@ -15,7 +17,6 @@ const assignPlayersToTournament = async (
     const playerIds = allPlayers.map((player) => player.id);
 
     if (playerIds.length < numberOfPlayers) {
-
       return;
     }
 
@@ -72,6 +73,6 @@ const assignPlayersToTournament = async (
 };
 
 // Call the function
-const tournamentEditionId = 19 // Replace with actual tournamentEditionId
-const numberOfPlayers = 15; // Replace with the number of players you want to assign
+const tournamentEditionId = 1; // Replace with actual tournamentEditionId
+const numberOfPlayers = 16; // Replace with the number of players you want to assign
 assignPlayersToTournament(tournamentEditionId, numberOfPlayers);

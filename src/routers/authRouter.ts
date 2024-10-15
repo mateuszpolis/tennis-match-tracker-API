@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
@@ -7,13 +8,15 @@ import crypto from "crypto";
 import { Op } from "sequelize";
 import MailService from "../services/mailService";
 import AuthService from "../services/authService";
+import { env } from "process";
 
 class AuthRouter {
   public router = express.Router();
-  private mailService;
-  private authService;
+  private mailService: MailService;
+  private authService: AuthService;
 
   constructor(mailService: MailService, authService: AuthService) {
+    dotenv.config();
     this.mailService = mailService;
     this.authService = authService;
     this.initializeRoutes();
@@ -57,6 +60,7 @@ class AuthRouter {
 
       res.status(200).json({ message: "Password reset email sent" });
     } catch (err: any) {
+      console.log(err);
       res.status(500).json({ message: "Server error", error: err.message });
     }
   };
@@ -158,7 +162,9 @@ class AuthRouter {
       }
 
       const payload = { user: user };
-      const token = jwt.sign(payload, "your_jwt_secret", { expiresIn: "1h" });
+      const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
+        expiresIn: "1h",
+      });
 
       res.cookie("jwt", token, {
         httpOnly: true,

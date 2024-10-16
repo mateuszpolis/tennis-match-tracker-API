@@ -5,6 +5,7 @@ import AuthService from "../../services/__mocks__/authService";
 import cookieParser from "cookie-parser";
 import MatchService from "../../services/__mocks__/matchService";
 import TournamentService from "../../services/__mocks__/tournamentService";
+import sequelize from "../../config/database";
 
 jest.mock("../../services/groundService");
 jest.mock("../../services/authService");
@@ -16,11 +17,20 @@ app.use(cookieParser());
 const authService = new AuthService();
 const matchService = new MatchService();
 const tournamentService = new TournamentService();
+const sequelizeMock = sequelize as jest.Mocked<typeof sequelize>;
+
+const tMock = {
+  commit: jest.fn(),
+  rollback: jest.fn(),
+};
+
+sequelizeMock.transaction = jest.fn().mockResolvedValue(tMock as any);
 
 const matchRouter = new MatchRouter(
   authService,
   matchService,
-  tournamentService as any
+  tournamentService as any,
+  sequelizeMock
 );
 app.use("/matches", matchRouter.router);
 

@@ -11,7 +11,7 @@ export default class AuthService {
   });
 
   hasRole(roles: any[]): any {
-    return (req: any, res: any, next: any) => {      
+    return (req: any, res: any, next: any) => {
       if (!roles.includes(req.user.role)) {
         return res
           .status(403)

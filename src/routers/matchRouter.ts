@@ -2,25 +2,28 @@ import express, { Request, Response } from "express";
 import AuthService from "../services/authService";
 import MatchService from "../services/matchService";
 import { MatchCreationAttributes } from "../models/Match";
-import sequelize from "../config/database";
 import TournamentService from "../services/tournamentService";
 import { PlayerStatsAttributes } from "models/PlayerStats";
 import { UserRole } from "../models/User";
+import { Sequelize } from "sequelize";
 
 class MatchRouter {
   public router = express.Router();
   private authService;
   private matchService;
   private tournamentService;
+  private sequelize;
 
   constructor(
     authService: AuthService,
     matchService: MatchService,
-    tournamentService: TournamentService
+    tournamentService: TournamentService,
+    sequelize: Sequelize
   ) {
     this.authService = authService;
     this.matchService = matchService;
     this.tournamentService = tournamentService;
+    this.sequelize = sequelize;
     this.initializeRoutes();
   }
 
@@ -55,7 +58,7 @@ class MatchRouter {
       return res.status(400).json({ message: "Match ID is required" });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const match = await this.matchService.getMatchById(id, t);
       if (!match) {
@@ -106,7 +109,7 @@ class MatchRouter {
   private createMatch = async (req: Request, res: Response): Promise<any> => {
     const input = req.body as MatchCreationAttributes;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       await this.matchService.createMatch(input, t);
       await t.commit();
@@ -122,7 +125,7 @@ class MatchRouter {
   private getMatch = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const match = await this.matchService.getMatchById(parseInt(id), t);
       if (!match) {
@@ -152,7 +155,7 @@ class MatchRouter {
   ): Promise<any> => {
     const { id } = req.params;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const matches = await this.matchService.getUpcomingMatchesForUser(
         parseInt(id)

@@ -1,20 +1,24 @@
 import express, { Request, Response } from "express";
 import AuthService from "../services/authService";
 import GroundService from "../services/groundService";
-import sequelize from "../config/database";
-import TennisGround, {
-  TennisGroundCreationAttributes,
-} from "../models/TennisGround";
+import { TennisGroundCreationAttributes } from "../models/TennisGround";
 import { UserRole } from "../models/User";
+import { Sequelize } from "sequelize";
 
 class GroundRouter {
   public router = express.Router();
   private groundService: GroundService;
   private authService: AuthService;
+  private sequelize;
 
-  constructor(groundService: GroundService, authService: AuthService) {
+  constructor(
+    groundService: GroundService,
+    authService: AuthService,
+    sequelize: Sequelize
+  ) {
     this.groundService = groundService;
     this.authService = authService;
+    this.sequelize = sequelize;
     this.initializeRoutes();
   }
 
@@ -46,7 +50,7 @@ class GroundRouter {
   private createGround = async (req: Request, res: Response): Promise<any> => {
     const input = req.body as TennisGroundCreationAttributes;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       await this.groundService.createGround(input, t);
       await t.commit();
@@ -64,7 +68,7 @@ class GroundRouter {
   private editGround = async (req: Request, res: Response): Promise<any> => {
     const { id, ...updateData } = req.body;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const updated = await this.groundService.editGround(id, updateData, t);
 
@@ -88,7 +92,7 @@ class GroundRouter {
   private deleteGround = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const deleted = await this.groundService.deleteGround(Number(id), t);
 

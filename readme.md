@@ -5,7 +5,7 @@ To set up the Tennis Match Tracker API, follow these steps:
 1. **Clone the repository:**
 
 ```sh
-git clone https://github.com/yourusername/tennis-match-tracker-API.git
+git clone https://github.com/mateuszpolis/tennis-match-tracker-API.git
 cd tennis-match-tracker-API
 ```
 

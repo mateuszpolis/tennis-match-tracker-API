@@ -6,6 +6,7 @@ import AuthService from "../../services/__mocks__/authService";
 import GroundService from "../../services/__mocks__/groundService";
 import cookieParser from "cookie-parser";
 import Tournament from "../../models/Tournament";
+import sequelize from "../../config/database";
 
 const app = express();
 app.use(express.json());
@@ -14,11 +15,20 @@ app.use(cookieParser());
 const mockTournamentService = new TournamentService();
 const mockAuthService = new AuthService();
 const mockGroundService = new GroundService();
+const sequelizeMock = sequelize as jest.Mocked<typeof sequelize>;
+
+const tMock = {
+  commit: jest.fn(),
+  rollback: jest.fn(),
+};
+
+sequelizeMock.transaction = jest.fn().mockResolvedValue(tMock as any);
 
 const tournamentRouter = new TournamentRouter(
   mockTournamentService as any,
   mockAuthService,
-  mockGroundService
+  mockGroundService,
+  sequelizeMock
 );
 
 app.use("/tournaments", tournamentRouter.router);
@@ -26,16 +36,18 @@ app.use("/tournaments", tournamentRouter.router);
 describe("TournamentRouter", () => {
   describe("POST /tournaments/create", () => {
     it("should create a tournament", async () => {
-      jest.spyOn(mockGroundService, "getGroundById").mockResolvedValue({});
+      jest.spyOn(mockGroundService, "getGroundById").mockResolvedValue({});    
+      jest.spyOn(Tournament, "findOne").mockResolvedValue(null);
+      
       jest
         .spyOn(mockTournamentService, "createTournament")
         .mockResolvedValue({});
-
+    
       const response = await request(app)
         .post("/tournaments/create")
         .set("Cookie", "jwt=validtoken")
         .send({ name: "Test Tournament", tennisGroundId: 1 });
-
+    
       expect(response.status).toBe(201);
       expect(response.body.message).toBe("Tournament created successfully");
     });

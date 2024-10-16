@@ -5,25 +5,29 @@ import Tournament, {
   TournamentFilterOptions,
 } from "../models/Tournament";
 import TournamentService from "../services/tournamentService";
-import sequelize from "../config/database";
 import { TournamentEditionCreationAttributes } from "../models/TournamentEdition";
 import User, { UserRole } from "../models/User";
 import GroundService from "../services/groundService";
+import { Sequelize } from "sequelize";
+import e from "express";
 
 class TournamentRouter {
   public router = express.Router();
   private tournamentService;
   private authService;
   private groundService;
+  private sequelize;
 
   constructor(
     tournamentService: TournamentService,
     authService: AuthService,
-    groundService: GroundService
+    groundService: GroundService,
+    sequelize: Sequelize
   ) {
     this.tournamentService = tournamentService;
     this.authService = authService;
     this.groundService = groundService;
+    this.sequelize = sequelize;
     this.initializeRoutes();
   }
 
@@ -83,34 +87,41 @@ class TournamentRouter {
     this.router.get("/query", this.queryTournaments);
   }
 
-  // Tournaments
   private createTournament = async (
     req: Request,
     res: Response
   ): Promise<any> => {
+    console.log("Creating tournament");
     const input = req.body as TournamentCreationAttributes;
 
+    console.log("Checking if tournament exists");
     const existingTournament = await Tournament.findOne({
       where: {
         name: input.name,
       },
     });
+    console.log("Checked if tournament exists");
 
+    console.log(existingTournament);
     if (existingTournament) {
       return res
         .status(400)
         .json({ message: "Tournament with this name already exists" });
     }
+    console.log("Checked if tournament exists");
 
     const tennisGround = await this.groundService.getGroundById(
       input.tennisGroundId
     );
+    console.log("Checked if tennis ground exists");
 
     if (!tennisGround) {
       return res.status(404).json({ message: "Tennis ground does not exist" });
     }
 
-    const t = await sequelize.transaction();
+    console.log("Creating tournament");
+    const t = await this.sequelize.transaction();
+    console.log("Transaction started");
     try {
       await this.tournamentService.createTournament(input, t);
       await t.commit();
@@ -136,7 +147,7 @@ class TournamentRouter {
       return res.status(404).json({ message: "Tournament not found" });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const updated = await this.tournamentService.editTournament(
         id,
@@ -174,7 +185,7 @@ class TournamentRouter {
       return res.status(404).json({ message: "Tournament not found" });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const deleted = await this.tournamentService.deleteTournament(
         Number(id),
@@ -257,7 +268,7 @@ class TournamentRouter {
         .json({ message: "Tournament edition for this year already exists." });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       await this.tournamentService.createTournamentEdition(input, t);
 
@@ -279,7 +290,7 @@ class TournamentRouter {
   ): Promise<any> => {
     const { year, tournamentId, ...updateData } = req.body;
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const updated = await this.tournamentService.editTournamentEdition(
         year,
@@ -397,7 +408,7 @@ class TournamentRouter {
       return res.status(400).json({ message: "User already signed-up" });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       await this.tournamentService.createUserTournamentEdition(
         userId,
@@ -434,7 +445,7 @@ class TournamentRouter {
       return res.status(404).json({ message: "Tournament edition not found" });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       const deleted = await this.tournamentService.deleteTournamentEdition(
         Number(id),
@@ -485,7 +496,7 @@ class TournamentRouter {
       return res.status(400).json({ message: "Not enough contestants" });
     }
 
-    const t = await sequelize.transaction();
+    const t = await this.sequelize.transaction();
     try {
       await this.tournamentService.closeTournamentRegistration(
         tournamentEdition,

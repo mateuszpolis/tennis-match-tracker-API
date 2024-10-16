@@ -4,6 +4,7 @@ import GroundRouter from "../groundRouter";
 import AuthService from "../../services/__mocks__/authService";
 import GroundService from "../../services/__mocks__/groundService";
 import cookieParser from "cookie-parser";
+import sequelize from "../../config/database";
 
 jest.mock("../../services/groundService");
 jest.mock("../../services/authService");
@@ -14,19 +15,33 @@ app.use(cookieParser());
 
 const authService = new AuthService();
 const groundService = new GroundService();
+const sequelizeMock = sequelize as jest.Mocked<typeof sequelize>;
 
-const groundRouter = new GroundRouter(groundService, authService);
+const tMock = {
+  commit: jest.fn(),
+  rollback: jest.fn(),
+};
+
+sequelizeMock.transaction = jest.fn().mockResolvedValue(tMock as any);
+
+const groundRouter = new GroundRouter(groundService, authService, sequelizeMock);
 app.use("/grounds", groundRouter.router);
 
 describe("GroundRouter", () => {
   it("should create a new tennis ground", async () => {
     groundService.createGround.mockResolvedValue({});
+
     const response = await request(app)
       .post("/grounds/create")
       .set("Cookie", "jwt=validtoken")
       .send({ name: "Test Ground" });
+
     expect(response.status).toBe(201);
     expect(response.body.message).toBe("Tennis ground created successfully");
+
+    expect(sequelize.transaction).toHaveBeenCalled();
+    expect(tMock.commit).toHaveBeenCalled();
+    expect(tMock.rollback).not.toHaveBeenCalled();
   });
 
   it("should edit an existing tennis ground", async () => {

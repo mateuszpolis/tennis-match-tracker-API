@@ -42,16 +42,19 @@ const tournamentService = new TournamentService(matchService);
 const userService = new UserService();
 
 const authRouter = new AuthRouter(mailService, authService).router;
-const groundRouter = new GroundRouter(groundService, authService).router;
+const groundRouter = new GroundRouter(groundService, authService, sequelize)
+  .router;
 const matchRouter = new MatchRouter(
   authService,
   matchService,
-  tournamentService
+  tournamentService,
+  sequelize
 ).router;
 const tournamentRouter = new TournamentRouter(
   tournamentService,
   authService,
-  groundService
+  groundService,
+  sequelize
 ).router;
 const userRouter = new UserRouter(authService, userService).router;
 
@@ -66,7 +69,7 @@ app.get("/", (req, res) => {
 });
 
 (async () => {
-  try {  
+  try {
     app.listen(5010, () => {
       console.log("Server is running on port 5010");
     });
